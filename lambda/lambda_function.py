@@ -281,49 +281,54 @@ def generate_followup_questions(conversation_context, query, response, locale='e
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        url = "https://api.openai.com/v1/chat/completions"
+        # GPT-5 uses Responses API
+        url = "https://api.openai.com/v1/responses"
 
         # Prepare prompt based on language
         if locale == 'ja':
-            system_content = "あなたは短いフォローアップ質問を提案する日本語アシスタントです。"
-            user_content = """会話に基づいて、とても短いフォローアップ質問を2つ提案してください（各5文字以内）。
+            instruction = """あなたは短いフォローアップ質問を提案する日本語アシスタントです。
+            会話に基づいて、とても短いフォローアップ質問を2つ提案してください（各5文字以内）。
             シンプルで直接的にしてください。質問のみを'|'で区切って返してください。
             例: 理由は？|具体例は？"""
         else:
-            system_content = "You are a helpful assistant that suggests short follow-up questions."
-            user_content = """Based on the conversation, suggest 2 very short follow-up questions (max 4 words each).
+            instruction = """You are a helpful assistant that suggests short follow-up questions.
+            Based on the conversation, suggest 2 very short follow-up questions (max 4 words each).
             Make them direct and simple. Return ONLY the questions separated by '|'.
             Example: What's the capital?|How big is it?"""
 
-        messages = [
-            {"role": "system", "content": system_content},
-            {"role": "user", "content": user_content}
-        ]
+        # Build the input
+        full_input = instruction + "\n\n"
 
         # Add conversation context
         if conversation_context:
             last_q, last_a = conversation_context[-1]
             q_prefix = "前の質問: " if locale == 'ja' else "Previous Q: "
-            messages.append({"role": "user", "content": f"{q_prefix}{last_q}"})
-            messages.append({"role": "assistant", "content": last_a})
+            full_input += f"{q_prefix}{last_q}\n"
+            full_input += f"Answer: {last_a}\n\n"
 
         q_current = "現在の質問: " if locale == 'ja' else "Current Q: "
+        full_input += f"{q_current}{query}\n"
+        full_input += f"Answer: {response}\n\n"
+
         q_prompt = "フォローアップ質問（|で区切る）:" if locale == 'ja' else "Follow-up questions (separated by |):"
+        full_input += q_prompt
 
-        messages.append({"role": "user", "content": f"{q_current}{query}"})
-        messages.append({"role": "assistant", "content": response})
-        messages.append({"role": "user", "content": q_prompt})
-
+        # GPT-5 Responses API format
         data = {
             "model": "gpt-5-nano",  # Using lightweight model for quick follow-up generation
-            "messages": messages,
-            "max_completion_tokens": 50,  # Updated parameter name for GPT-5
-            "temperature": 0.7
+            "input": full_input,
+            "reasoning": {
+                "effort": "minimal"  # Fast response for follow-ups
+            },
+            "text": {
+                "verbosity": "low"  # Concise output
+            }
         }
 
         response = requests.post(url, headers=headers, data=json.dumps(data), timeout=3)
         if response.ok:
-            questions_text = response.json()['choices'][0]['message']['content'].strip()
+            # GPT-5 Responses API returns 'output_text'
+            questions_text = response.json().get('output_text', '').strip()
             # Clean and split the response
             questions = [q.strip().rstrip('?？') for q in questions_text.split('|') if q.strip()]
 
@@ -361,43 +366,54 @@ def generate_gpt_response(chat_history, new_question, is_followup=False, locale=
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
-    url = "https://api.openai.com/v1/chat/completions"
+    # GPT-5 uses Responses API, not Chat Completions API
+    url = "https://api.openai.com/v1/responses"
 
-    # Create system message based on language and context
+    # Build context from chat history
+    context = ""
+    if chat_history:
+        history_limit = 10 if not is_followup else 5
+        for question, answer in chat_history[-history_limit:]:
+            context += f"User: {question}\nAssistant: {answer}\n"
+
+    # Create the input prompt
     if locale == 'ja':
-        system_message = "あなたは親切なアシスタントです。50文字以内で簡潔に答えてください。"
+        system_instruction = "あなたは親切なアシスタントです。50文字以内で簡潔に答えてください。"
         if is_followup:
-            system_message += " これは前の会話のフォローアップ質問です。すでに提供した情報を繰り返さず、文脈を維持してください。"
+            system_instruction += " これは前の会話のフォローアップ質問です。すでに提供した情報を繰り返さず、文脈を維持してください。"
     else:
-        system_message = "You are a helpful assistant. Answer in 50 words or less."
+        system_instruction = "You are a helpful assistant. Answer in 50 words or less."
         if is_followup:
-            system_message += " This is a follow-up question to the previous conversation. Maintain context without repeating information already provided."
+            system_instruction += " This is a follow-up question to the previous conversation. Maintain context without repeating information already provided."
 
-    # Enhanced system message for GPT-5's advanced capabilities
-    messages = [{"role": "system", "content": system_message}]
+    # Combine context and new question
+    full_input = f"{system_instruction}\n\n"
+    if context:
+        full_input += f"Previous conversation:\n{context}\n"
+    full_input += f"Current question: {new_question}"
 
-    # Include relevant conversation history
-    history_limit = 10 if not is_followup else 5
-    for question, answer in chat_history[-history_limit:]:
-        messages.append({"role": "user", "content": question})
-        messages.append({"role": "assistant", "content": answer})
-
-    # Add the new question
-    messages.append({"role": "user", "content": new_question})
-
+    # GPT-5 Responses API format
     data = {
         "model": model,
-        "messages": messages,
-        "max_completion_tokens": 300,  # Updated parameter name for GPT-5
-        "temperature": 0.7,  # Balanced creativity and accuracy
-        "reasoning_effort": "medium"  # GPT-5 specific parameter for balanced reasoning
+        "input": full_input,
+        "reasoning": {
+            "effort": "medium"  # minimal, low, medium, high
+        },
+        "text": {
+            "verbosity": "medium"  # low, medium, high
+        }
     }
 
     try:
         response = requests.post(url, headers=headers, data=json.dumps(data))
         response_data = response.json()
         if response.ok:
-            response_text = response_data['choices'][0]['message']['content']
+            # GPT-5 Responses API returns 'output_text' instead of 'choices'
+            response_text = response_data.get('output_text', '')
+
+            # Also log reasoning tokens if available
+            if 'reasoning_text' in response_data:
+                logger.info(f"Reasoning tokens used: {len(response_data['reasoning_text'])}")
 
             # Generate follow-up questions for the response
             try:
@@ -414,7 +430,8 @@ def generate_gpt_response(chat_history, new_question, is_followup=False, locale=
 
             return response_text, followup_questions
         else:
-            return f"Error {response.status_code}: {response_data['error']['message']}", []
+            error_msg = response_data.get('error', {}).get('message', 'Unknown error')
+            return f"Error {response.status_code}: {error_msg}", []
     except Exception as e:
         logger.error(f"Error generating response: {str(e)}")
         return f"Error generating response: {str(e)}", []

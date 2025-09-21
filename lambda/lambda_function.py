@@ -8,18 +8,20 @@ import requests
 import logging
 import json
 import re
+import os
 
-# Set your OpenAI API key
-api_key = "YOUR_API_KEY"
+# Get OpenAI API key from environment variable for security
+api_key = os.environ.get("OPENAI_API_KEY", "")
 
-# GPT-5 model - choose from gpt-5, gpt-5-mini, or gpt-5-nano
-# gpt-5: Best performance ($1.25/1M input, $10/1M output)
-# gpt-5-mini: Balanced ($0.25/1M input, $2/1M output)
-# gpt-5-nano: Most economical ($0.05/1M input, $0.40/1M output)
-model = "gpt-5-mini"  # Using gpt-5-mini for balanced performance and cost
+# GPT-4 model (GPT-5 does not exist yet)
+model = "gpt-4"  # Using GPT-4 as GPT-5 is not available
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+# Log warning if API key is not configured
+if not api_key:
+    logger.warning("OpenAI API key not configured. Set OPENAI_API_KEY environment variable.")
 
 def detect_language(text):
     """Simple language detection based on character analysis"""
@@ -38,8 +40,9 @@ def get_localized_message(key, locale='en'):
     """Get localized messages based on locale"""
     messages = {
         'en': {
-            'welcome': "GenAI assistant with GPT-5 activated. How can I help you today?",
-            'goodbye': "Thank you for using GenAI assistant. Goodbye!",
+            'welcome': "Welcome to Gen AI assistant. How can I help you today?",
+            'goodbye': "Thank you for using Gen AI assistant. Goodbye!",
+            'help': "You can ask me any question and I'll try to help. Just say something like 'tell me about artificial intelligence' or 'what is the weather like today'. What would you like to know?",
             'error': "Sorry, I had trouble doing what you asked. Please try again.",
             'reprompt': "You can ask me another question or say stop to end the conversation.",
             'reprompt_with_followup': "You can ask me another question, say 'next' to hear more suggestions, or say stop to end the conversation.",
@@ -47,11 +50,13 @@ def get_localized_message(key, locale='en'):
             'followup_outro': ". What would you like to know?",
             'clear_context': "I've cleared our conversation history. What would you like to talk about?",
             'default_followup_1': "Tell me more",
-            'default_followup_2': "Give me an example"
+            'default_followup_2': "Give me an example",
+            'test': "Hello! Gen AI is working properly. You can ask me any question."
         },
         'ja': {
-            'welcome': "GPT-5を搭載したGenAIアシスタントが起動しました。何かお手伝いしましょうか？",
-            'goodbye': "GenAIアシスタントをご利用いただきありがとうございました。さようなら！",
+            'welcome': "じぇないアシスタントへようこそ。何かお手伝いしましょうか？",
+            'goodbye': "じぇないアシスタントをご利用いただきありがとうございました。さようなら！",
+            'help': "何でも質問してください。たとえば「人工知能について教えて」や「今日の天気は」と言ってみてください。何か知りたいことはありますか？",
             'error': "申し訳ございません。エラーが発生しました。もう一度お試しください。",
             'reprompt': "他に質問がありましたらどうぞ。終了する場合は「ストップ」と言ってください。",
             'reprompt_with_followup': "他に質問がありましたらどうぞ。提案を聞く場合は「次」、終了する場合は「ストップ」と言ってください。",
@@ -59,7 +64,8 @@ def get_localized_message(key, locale='en'):
             'followup_outro': "。何か知りたいことはありますか？",
             'clear_context': "会話履歴をクリアしました。何についてお話ししましょうか？",
             'default_followup_1': "詳しく教えて",
-            'default_followup_2': "例を教えて"
+            'default_followup_2': "例を教えて",
+            'test': "こんにちは！じぇないは正常に動作しています。何でも質問してください。"
         }
     }
 
@@ -251,6 +257,11 @@ def extract_context(question, response):
 def generate_followup_questions(conversation_context, query, response, locale='en', count=2):
     """Generates concise follow-up questions based on the conversation context"""
     try:
+        if not api_key:
+            logger.warning("API key not configured, using default follow-ups")
+            return [get_localized_message('default_followup_1', locale),
+                   get_localized_message('default_followup_2', locale)]
+
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
@@ -289,7 +300,7 @@ def generate_followup_questions(conversation_context, query, response, locale='e
         messages.append({"role": "user", "content": q_prompt})
 
         data = {
-            "model": "gpt-5-nano",  # Using lightweight model for quick follow-up generation
+            "model": "gpt-3.5-turbo",  # Using lightweight model for quick follow-up generation
             "messages": messages,
             "max_tokens": 50,
             "temperature": 0.7
@@ -326,6 +337,11 @@ def generate_followup_questions(conversation_context, query, response, locale='e
 
 def generate_gpt_response(chat_history, new_question, is_followup=False, locale='en'):
     """Generates a GPT response to a question with enhanced context handling"""
+    if not api_key:
+        error_msg = "API key not configured" if locale == 'en' else "APIキーが設定されていません"
+        logger.error("OpenAI API key not configured")
+        return error_msg, []
+
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
@@ -358,8 +374,7 @@ def generate_gpt_response(chat_history, new_question, is_followup=False, locale=
         "model": model,
         "messages": messages,
         "max_tokens": 300,
-        "temperature": 0.7,  # Balanced creativity and accuracy
-        "reasoning_effort": "medium"  # GPT-5 specific parameter for balanced reasoning
+        "temperature": 0.7  # Balanced creativity and accuracy
     }
 
     try:
@@ -411,12 +426,118 @@ class ClearContextIntentHandler(AbstractRequestHandler):
                 .response
         )
 
+class HelpIntentHandler(AbstractRequestHandler):
+    """Handler for Help Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("AMAZON.HelpIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        session_attr = handler_input.attributes_manager.session_attributes
+        locale = session_attr.get("device_locale", get_device_locale(handler_input))
+        speak_output = get_localized_message('help', locale)
+
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .ask(speak_output)
+                .response
+        )
+
+class FallbackIntentHandler(AbstractRequestHandler):
+    """Handler for Fallback Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("AMAZON.FallbackIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        logger.info("In FallbackIntentHandler")
+        session_attr = handler_input.attributes_manager.session_attributes
+        locale = session_attr.get("device_locale", get_device_locale(handler_input))
+        speak_output = get_localized_message('error', locale)
+
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .ask(speak_output)
+                .response
+        )
+
+class TestIntentHandler(AbstractRequestHandler):
+    """Handler for Test Intent."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_intent_name("TestIntent")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        session_attr = handler_input.attributes_manager.session_attributes
+        locale = session_attr.get("device_locale", get_device_locale(handler_input))
+        speak_output = get_localized_message('test', locale)
+
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .ask(speak_output)
+                .response
+        )
+
+class SessionEndedRequestHandler(AbstractRequestHandler):
+    """Handler for Session End."""
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_request_type("SessionEndedRequest")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        # Any cleanup logic goes here.
+        logger.info("Session ended with reason: {}".format(
+            handler_input.request_envelope.request.reason))
+
+        return handler_input.response_builder.response
+
+class IntentReflectorHandler(AbstractRequestHandler):
+    """The intent reflector is used for interaction model testing and debugging.
+    It will simply repeat the intent the user said. You can create custom handlers
+    for your intents by defining them above, then also adding them to the request
+    handler chain below.
+    """
+    def can_handle(self, handler_input):
+        # type: (HandlerInput) -> bool
+        return ask_utils.is_request_type("IntentRequest")(handler_input)
+
+    def handle(self, handler_input):
+        # type: (HandlerInput) -> Response
+        intent_name = ask_utils.get_intent_name(handler_input)
+        session_attr = handler_input.attributes_manager.session_attributes
+        locale = session_attr.get("device_locale", get_device_locale(handler_input))
+
+        if locale == 'ja':
+            speak_output = f"「{intent_name}」というインテントをトリガーしました。"
+        else:
+            speak_output = f"You just triggered {intent_name} intent."
+
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .response
+        )
+
 sb = SkillBuilder()
 
+# Register handlers in specific order - most specific first
 sb.add_request_handler(LaunchRequestHandler())
+sb.add_request_handler(TestIntentHandler())
 sb.add_request_handler(GptQueryIntentHandler())
+sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(ClearContextIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
+sb.add_request_handler(FallbackIntentHandler())
+sb.add_request_handler(SessionEndedRequestHandler())
+sb.add_request_handler(IntentReflectorHandler())  # make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
+
 sb.add_exception_handler(CatchAllExceptionHandler())
 
 lambda_handler = sb.lambda_handler()

@@ -7,7 +7,7 @@
                     "summary": "GenAI Assistant for Alexa",
                     "description": "Alexa skill that uses generative AI models to provide intelligent responses",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -16,7 +16,7 @@
                     "summary": "GenAI Assistant for Alexa",
                     "description": "Alexa skill that uses generative AI models to provide intelligent responses",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -25,7 +25,7 @@
                     "summary": "GenAI Assistant for Alexa",
                     "description": "Alexa skill that uses generative AI models to provide intelligent responses",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -34,7 +34,7 @@
                     "summary": "GenAI Assistant for Alexa",
                     "description": "Alexa skill that uses generative AI models to provide intelligent responses",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -43,7 +43,7 @@
                     "summary": "GenAI Assistant for Alexa",
                     "description": "Alexa skill that uses generative AI models to provide intelligent responses",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -52,7 +52,7 @@
                     "summary": "Asistente GenAI para Alexa",
                     "description": "Skill de Alexa que utiliza la API de OpenAI para generar respuestas desde el modelo ChatGPT",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -61,7 +61,7 @@
                     "summary": "Asistente GenAI para Alexa",
                     "description": "Skill de Alexa que utiliza la API de OpenAI para generar respuestas desde el modelo ChatGPT",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -70,7 +70,7 @@
                     "summary": "Asistente GenAI para Alexa",
                     "description": "Skill de Alexa que utiliza la API de OpenAI para generar respuestas desde el modelo ChatGPT",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -79,7 +79,7 @@
                     "summary": "Assistant GenAI pour Alexa",
                     "description": "Skill Alexa qui utilise l'API OpenAI pour générer des réponses à partir du modèle ChatGPT",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -88,7 +88,7 @@
                     "summary": "Assistant GenAI pour Alexa",
                     "description": "Skill Alexa qui utilise l'API OpenAI pour générer des réponses à partir du modèle ChatGPT",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -97,7 +97,7 @@
                     "summary": "Alexa用GenAIアシスタント",
                     "description": "OpenAI APIを使用してChatGPTモデルからの応答を生成するAlexaスキル",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -106,7 +106,7 @@
                     "summary": "GenAI Assistant for Alexa",
                     "description": "Alexa-Skill, der die OpenAI-API verwendet, um Antworten vom ChatGPT-Modell zu generieren",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -115,7 +115,7 @@
                     "summary": "GenAI Assistant for Alexa",
                     "description": "Skill di Alexa che utilizza l'API di OpenAI per generare risposte dal modello ChatGPT",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -124,7 +124,7 @@
                     "summary": "Alexa के लिए GenAI सहायक",
                     "description": "Alexa कौशल जो OpenAI API का उपयोग करके ChatGPT मॉडल से प्रतिक्रियाएं उत्पन्न करता है",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 },
@@ -133,7 +133,7 @@
                     "summary": "Assistente GenAI para Alexa",
                     "description": "Skill Alexa que usa a API da OpenAI para gerar respostas a partir do modelo ChatGPT",
                     "examplePhrases": [
-                        "Alexa genai"
+                        "Alexa jenai"
                     ],
                     "keywords": []
                 }

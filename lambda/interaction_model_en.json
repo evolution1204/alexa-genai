@@ -1,0 +1,65 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "gen ai",
+            "intents": [
+                {
+                    "name": "GptQueryIntent",
+                    "slots": [
+                        {
+                            "name": "query",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "what is {query}",
+                        "tell me about {query}",
+                        "explain {query}",
+                        "what's {query}",
+                        "describe {query}",
+                        "give me information about {query}",
+                        "search for {query}",
+                        "look up {query}",
+                        "find {query}",
+                        "help me understand {query}",
+                        "teach me about {query}",
+                        "show me {query}",
+                        "define {query}",
+                        "what does {query} mean",
+                        "how does {query} work"
+                    ]
+                },
+                {
+                    "name": "TestIntent",
+                    "slots": [],
+                    "samples": [
+                        "test",
+                        "hello",
+                        "check"
+                    ]
+                },
+                {
+                    "name": "AMAZON.FallbackIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                }
+            ],
+            "types": []
+        }
+    }
+}

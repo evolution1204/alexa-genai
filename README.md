@@ -44,7 +44,7 @@ Choose "Alexa-hosted (Python)" for the backend resources.
 ### 5.
 Click on "Import Skill", paste the link of this repository and click on "Import":
 ```
-https://github.com/[your-username]/alexa-genai.git
+https://github.com/evolution1204/alexa-genai.git
 ```
 ![template](images/import_git_skill.png)
 

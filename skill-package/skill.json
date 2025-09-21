@@ -3,49 +3,59 @@
         "publishingInformation": {
             "locales": {
                 "en-US": {
-                    "name": "genai",
-                    "summary": "GenAI Assistant for Alexa",
-                    "description": "Alexa skill that uses generative AI models to provide intelligent responses",
+                    "name": "GenAI Assistant",
+                    "summary": "AI-powered assistant using GPT-5",
+                    "description": "An intelligent Alexa skill that uses OpenAI's GPT-5 model to answer questions, provide creative content, and help with various tasks. Ask about any topic and get helpful responses.",
                     "examplePhrases": [
-                        "Alexa jenai"
+                        "Alexa, open jenai",
+                        "Alexa, ask jenai what is artificial intelligence",
+                        "Alexa, ask jenai to tell me a story about dragons"
                     ],
-                    "keywords": []
+                    "keywords": ["AI", "assistant", "GPT", "chat", "questions", "help", "information", "creative"]
                 },
                 "en-GB": {
-                    "name": "genai",
-                    "summary": "GenAI Assistant for Alexa",
-                    "description": "Alexa skill that uses generative AI models to provide intelligent responses",
+                    "name": "GenAI Assistant",
+                    "summary": "AI-powered assistant using GPT-5",
+                    "description": "An intelligent Alexa skill that uses OpenAI's GPT-5 model to answer questions, provide creative content, and help with various tasks. Ask about any topic and get helpful responses.",
                     "examplePhrases": [
-                        "Alexa jenai"
+                        "Alexa, open jenai",
+                        "Alexa, ask jenai what is artificial intelligence",
+                        "Alexa, ask jenai to tell me a story about dragons"
                     ],
-                    "keywords": []
+                    "keywords": ["AI", "assistant", "GPT", "chat", "questions", "help", "information", "creative"]
                 },
                 "en-CA": {
-                    "name": "genai",
-                    "summary": "GenAI Assistant for Alexa",
-                    "description": "Alexa skill that uses generative AI models to provide intelligent responses",
+                    "name": "GenAI Assistant",
+                    "summary": "AI-powered assistant using GPT-5",
+                    "description": "An intelligent Alexa skill that uses OpenAI's GPT-5 model to answer questions, provide creative content, and help with various tasks. Ask about any topic and get helpful responses.",
                     "examplePhrases": [
-                        "Alexa jenai"
+                        "Alexa, open jenai",
+                        "Alexa, ask jenai what is artificial intelligence",
+                        "Alexa, ask jenai to tell me a story about dragons"
                     ],
-                    "keywords": []
+                    "keywords": ["AI", "assistant", "GPT", "chat", "questions", "help", "information", "creative"]
                 },
                 "en-IN": {
-                    "name": "genai",
-                    "summary": "GenAI Assistant for Alexa",
-                    "description": "Alexa skill that uses generative AI models to provide intelligent responses",
+                    "name": "GenAI Assistant",
+                    "summary": "AI-powered assistant using GPT-5",
+                    "description": "An intelligent Alexa skill that uses OpenAI's GPT-5 model to answer questions, provide creative content, and help with various tasks. Ask about any topic and get helpful responses.",
                     "examplePhrases": [
-                        "Alexa jenai"
+                        "Alexa, open jenai",
+                        "Alexa, ask jenai what is artificial intelligence",
+                        "Alexa, ask jenai to tell me a story about dragons"
                     ],
-                    "keywords": []
+                    "keywords": ["AI", "assistant", "GPT", "chat", "questions", "help", "information", "creative"]
                 },
                 "en-AU": {
-                    "name": "genai",
-                    "summary": "GenAI Assistant for Alexa",
-                    "description": "Alexa skill that uses generative AI models to provide intelligent responses",
+                    "name": "GenAI Assistant",
+                    "summary": "AI-powered assistant using GPT-5",
+                    "description": "An intelligent Alexa skill that uses OpenAI's GPT-5 model to answer questions, provide creative content, and help with various tasks. Ask about any topic and get helpful responses.",
                     "examplePhrases": [
-                        "Alexa jenai"
+                        "Alexa, open jenai",
+                        "Alexa, ask jenai what is artificial intelligence",
+                        "Alexa, ask jenai to tell me a story about dragons"
                     ],
-                    "keywords": []
+                    "keywords": ["AI", "assistant", "GPT", "chat", "questions", "help", "information", "creative"]
                 },
                 "es-ES": {
                     "name": "genai",
@@ -93,13 +103,15 @@
                     "keywords": []
                 },
                 "ja-JP": {
-                    "name": "genai",
-                    "summary": "Alexa用GenAIアシスタント",
-                    "description": "OpenAI APIを使用してChatGPTモデルからの応答を生成するAlexaスキル",
+                    "name": "GenAIアシスタント",
+                    "summary": "GPT-5を使用したAIアシスタント",
+                    "description": "OpenAIのGPT-5モデルを使用して、質問への回答、創作活動、様々なタスクのサポートを行うインテリジェントなAlexaスキルです。どんなトピックでも質問してください。",
                     "examplePhrases": [
-                        "Alexa jenai"
+                        "アレクサ、ジェナイを開いて",
+                        "アレクサ、ジェナイで人工知能について教えて",
+                        "アレクサ、ジェナイでドラゴンの物語を作って"
                     ],
-                    "keywords": []
+                    "keywords": ["AI", "アシスタント", "GPT", "チャット", "質問", "ヘルプ", "情報", "創作"]
                 },
                 "de-DE": {
                     "name": "genai",
@@ -139,7 +151,8 @@
                 }
             },
             "isAvailableWorldwide": true,
-            "testingInstructions": "Sample Testing Instructions",
+            "testingInstructions": "To test this skill:\n1. Say 'Alexa, open jenai' to start the skill\n2. Ask any question like 'What is the weather on Mars?'\n3. Request creative content like 'Tell me a story about space'\n4. Try emotional requests like 'Make me laugh'\n5. Say 'stop' or 'cancel' to exit the skill\n\nThe skill supports multiple languages and will automatically detect Japanese or English based on your input.",
+            "category": "EDUCATION_AND_REFERENCE",
             "distributionCountries": []
         },
         "apis": {

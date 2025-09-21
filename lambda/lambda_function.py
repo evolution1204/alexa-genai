@@ -88,19 +88,27 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        locale = get_device_locale(handler_input)
-        speak_output = get_localized_message('welcome', locale)
+        try:
+            logger.info("LaunchRequestHandler called")
+            locale = get_device_locale(handler_input)
+            logger.info(f"Detected locale: {locale}")
 
-        session_attr = handler_input.attributes_manager.session_attributes
-        session_attr["chat_history"] = []
-        session_attr["device_locale"] = locale
+            speak_output = get_localized_message('welcome', locale)
+            logger.info(f"Welcome message: {speak_output}")
 
-        return (
-            handler_input.response_builder
-                .speak(speak_output)
-                .ask(speak_output)
-                .response
-        )
+            session_attr = handler_input.attributes_manager.session_attributes
+            session_attr["chat_history"] = []
+            session_attr["device_locale"] = locale
+
+            return (
+                handler_input.response_builder
+                    .speak(speak_output)
+                    .ask(speak_output)
+                    .response
+            )
+        except Exception as e:
+            logger.error(f"Error in LaunchRequestHandler: {str(e)}", exc_info=True)
+            raise
 
 class GptQueryIntentHandler(AbstractRequestHandler):
     """Handler for Gpt Query Intent."""
@@ -183,16 +191,25 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 
     def handle(self, handler_input, exception):
         # type: (HandlerInput, Exception) -> Response
-        logger.error(exception, exc_info=True)
+        logger.error(f"Error caught: {str(exception)}", exc_info=True)
+        logger.error(f"Exception type: {type(exception).__name__}")
+        logger.error(f"Request type: {handler_input.request_envelope.request.object_type}")
+
+        # エラーの詳細をログに記録
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
 
         session_attr = handler_input.attributes_manager.session_attributes
         locale = session_attr.get("current_locale", get_device_locale(handler_input))
-        speak_output = get_localized_message('error', locale)
+
+        # デバッグ用により詳細なエラーメッセージを返す（本番では削除）
+        error_detail = str(exception)[:100] if exception else "Unknown error"
+        speak_output = f"{get_localized_message('error', locale)} Debug: {error_detail}"
 
         return (
             handler_input.response_builder
                 .speak(speak_output)
-                .ask(speak_output)
+                .ask(get_localized_message('error', locale))
                 .response
         )
 

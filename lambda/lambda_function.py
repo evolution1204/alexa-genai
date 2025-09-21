@@ -8,20 +8,18 @@ import requests
 import logging
 import json
 import re
-import os
 
-# Get OpenAI API key from environment variable for security
-api_key = os.environ.get("OPENAI_API_KEY", "")
+# Set your OpenAI API key
+api_key = ""  # ここにAPIキーを直接設定してください
 
-# GPT-4 model (GPT-5 does not exist yet)
-model = "gpt-4"  # Using GPT-4 as GPT-5 is not available
+# GPT-5 model - choose from gpt-5, gpt-5-mini, or gpt-5-nano
+# gpt-5: Best performance ($1.25/1M input, $10/1M output)
+# gpt-5-mini: Balanced ($0.25/1M input, $2/1M output)
+# gpt-5-nano: Most economical ($0.05/1M input, $0.40/1M output)
+model = "gpt-5-mini"  # Using gpt-5-mini for balanced performance and cost
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
-# Log warning if API key is not configured
-if not api_key:
-    logger.warning("OpenAI API key not configured. Set OPENAI_API_KEY environment variable.")
 
 def detect_language(text):
     """Simple language detection based on character analysis"""
@@ -300,7 +298,7 @@ def generate_followup_questions(conversation_context, query, response, locale='e
         messages.append({"role": "user", "content": q_prompt})
 
         data = {
-            "model": "gpt-3.5-turbo",  # Using lightweight model for quick follow-up generation
+            "model": "gpt-5-nano",  # Using lightweight model for quick follow-up generation
             "messages": messages,
             "max_tokens": 50,
             "temperature": 0.7
@@ -338,7 +336,7 @@ def generate_followup_questions(conversation_context, query, response, locale='e
 def generate_gpt_response(chat_history, new_question, is_followup=False, locale='en'):
     """Generates a GPT response to a question with enhanced context handling"""
     if not api_key:
-        error_msg = "API key not configured" if locale == 'en' else "APIキーが設定されていません"
+        error_msg = "API key not configured. Please set your OpenAI API key in the Lambda function." if locale == 'en' else "APIキーが設定されていません。Lambda関数にOpenAI APIキーを設定してください。"
         logger.error("OpenAI API key not configured")
         return error_msg, []
 
@@ -374,7 +372,8 @@ def generate_gpt_response(chat_history, new_question, is_followup=False, locale=
         "model": model,
         "messages": messages,
         "max_tokens": 300,
-        "temperature": 0.7  # Balanced creativity and accuracy
+        "temperature": 0.7,  # Balanced creativity and accuracy
+        "reasoning_effort": "medium"  # GPT-5 specific parameter for balanced reasoning
     }
 
     try:

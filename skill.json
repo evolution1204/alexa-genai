@@ -1,0 +1,155 @@
+{
+    "manifest": {
+        "publishingInformation": {
+            "locales": {
+                "en-US": {
+                    "name": "genai",
+                    "summary": "GenAI Assistant for Alexa",
+                    "description": "Alexa skill that uses generative AI models to provide intelligent responses",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "en-GB": {
+                    "name": "genai",
+                    "summary": "GenAI Assistant for Alexa",
+                    "description": "Alexa skill that uses generative AI models to provide intelligent responses",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "en-CA": {
+                    "name": "genai",
+                    "summary": "GenAI Assistant for Alexa",
+                    "description": "Alexa skill that uses generative AI models to provide intelligent responses",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "en-IN": {
+                    "name": "genai",
+                    "summary": "GenAI Assistant for Alexa",
+                    "description": "Alexa skill that uses generative AI models to provide intelligent responses",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "en-AU": {
+                    "name": "genai",
+                    "summary": "GenAI Assistant for Alexa",
+                    "description": "Alexa skill that uses generative AI models to provide intelligent responses",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "es-ES": {
+                    "name": "genai",
+                    "summary": "Asistente GenAI para Alexa",
+                    "description": "Skill de Alexa que utiliza la API de OpenAI para generar respuestas desde el modelo ChatGPT",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "es-MX": {
+                    "name": "genai",
+                    "summary": "Asistente GenAI para Alexa",
+                    "description": "Skill de Alexa que utiliza la API de OpenAI para generar respuestas desde el modelo ChatGPT",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "es-US": {
+                    "name": "genai",
+                    "summary": "Asistente GenAI para Alexa",
+                    "description": "Skill de Alexa que utiliza la API de OpenAI para generar respuestas desde el modelo ChatGPT",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "fr-FR": {
+                    "name": "genai",
+                    "summary": "Assistant GenAI pour Alexa",
+                    "description": "Skill Alexa qui utilise l'API OpenAI pour générer des réponses à partir du modèle ChatGPT",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "fr-CA": {
+                    "name": "genai",
+                    "summary": "Assistant GenAI pour Alexa",
+                    "description": "Skill Alexa qui utilise l'API OpenAI pour générer des réponses à partir du modèle ChatGPT",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "ja-JP": {
+                    "name": "genai",
+                    "summary": "Alexa用GenAIアシスタント",
+                    "description": "OpenAI APIを使用してChatGPTモデルからの応答を生成するAlexaスキル",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "de-DE": {
+                    "name": "genai",
+                    "summary": "GenAI Assistant for Alexa",
+                    "description": "Alexa-Skill, der die OpenAI-API verwendet, um Antworten vom ChatGPT-Modell zu generieren",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "it-IT": {
+                    "name": "genai",
+                    "summary": "GenAI Assistant for Alexa",
+                    "description": "Skill di Alexa che utilizza l'API di OpenAI per generare risposte dal modello ChatGPT",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "hi-IN": {
+                    "name": "genai",
+                    "summary": "Alexa के लिए GenAI सहायक",
+                    "description": "Alexa कौशल जो OpenAI API का उपयोग करके ChatGPT मॉडल से प्रतिक्रियाएं उत्पन्न करता है",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                },
+                "pt-BR": {
+                    "name": "genai",
+                    "summary": "Assistente GenAI para Alexa",
+                    "description": "Skill Alexa que usa a API da OpenAI para gerar respostas a partir do modelo ChatGPT",
+                    "examplePhrases": [
+                        "Alexa genai"
+                    ],
+                    "keywords": []
+                }
+            },
+            "isAvailableWorldwide": true,
+            "testingInstructions": "Sample Testing Instructions",
+            "distributionCountries": []
+        },
+        "apis": {
+            "custom": {
+				"endpoint": {
+					"sourceDir": "lambda",
+					"uri": "ask-custom-helloworld-classes-default"
+				}
+			}
+        },
+        "manifestVersion": "1.0"
+    }
+}

@@ -95,19 +95,35 @@ In the "Build" section, navigate to the "JSON Editor" tab and replace with the c
 
 ## Features
 
-- **Powered by GPT-4**: Utilizes OpenAI's latest GPT-4 models for state-of-the-art AI responses
+- **Powered by GPT-5**: Utilizes OpenAI's latest GPT-5 models (released August 2025) for state-of-the-art AI responses
 - **Multi-language Support**: Works in 15+ languages including English, Spanish, French, German, Japanese, and more
 - **Context Awareness**: Maintains conversation history for contextual responses
-- **Advanced Reasoning**: Leverages GPT-4's capabilities for more intelligent interactions
+- **Advanced Reasoning**: Leverages GPT-5's built-in thinking and reasoning capabilities for more intelligent interactions
 - **Customizable**: Easy to modify prompts and behavior
-- **Model Options**: Choose between GPT-4o, GPT-4o-mini, GPT-4-turbo, or GPT-3.5-turbo based on your needs
+- **Model Options**: Choose between GPT-5, GPT-5-mini, or GPT-5-nano based on your needs and budget
 
 ## Configuration
+
+### GPT-5 Model Details
+
+GPT-5 was released in August 2025 and offers three variants:
+
+| Model | Input Price | Output Price | Best For |
+|-------|------------|--------------|----------|
+| gpt-5 | $1.25/1M tokens | $10/1M tokens | Highest quality, complex reasoning |
+| gpt-5-mini | $0.25/1M tokens | $2/1M tokens | Balanced performance and cost |
+| gpt-5-nano | $0.05/1M tokens | $0.40/1M tokens | Fast, economical responses |
+
+GPT-5 excels in:
+- Math (94.6% on AIME 2025)
+- Coding (74.9% on SWE-bench)
+- Multimodal understanding (84.2% on MMMU)
+- Health applications (46.2% on HealthBench)
 
 ### Customizing the Model
 You can change the AI model in `lambda/lambda_function.py`:
 ```python
-# Choose from available GPT models:
+# Choose from three GPT-5 variants:
 model = "gpt-5-mini"  # Default: balanced performance and cost
 
 # Available models:
@@ -120,7 +136,7 @@ data = {
     "messages": messages,
     "max_tokens": 300,
     "temperature": 0.7,
-    "temperature": 0.7  # Control randomness: 0.0 to 2.0
+    "reasoning_effort": "medium"  # GPT-5 specific: minimal, low, medium, or high
 }
 ```
 
@@ -155,13 +171,13 @@ For issues, questions, or suggestions, please open an issue on GitHub.
 
 - Original concept inspired by alexa-gpt
 - Built with the Alexa Skills Kit (ASK) SDK
-- Powered by OpenAI's GPT-4 models
+- Powered by OpenAI's GPT-5 models (August 2025)
 
 ---
 
 ## <a name="japanese"></a>日本語
 
-AlexaにGPT-4による高度な生成AI機能を追加します。
+AlexaにGPT-5による高度な生成AI機能を追加します。
 
 このリポジトリには、OpenAI APIと統合して最先端の言語モデルを使用したインテリジェントで文脈を理解する応答を提供するAlexaスキルが含まれています。
 
@@ -210,12 +226,12 @@ https://github.com/[あなたのユーザー名]/alexa-genai.git
 
 ### 機能
 
-- **GPT-4搭載**: OpenAIの最新GPT-4モデルによる最先端のAI応答
+- **GPT-5搭載**: OpenAIの最新GPT-5モデル（2025年8月リリース）による最先端のAI応答
 - **完全な日本語対応**: 自動言語検出と日本語での自然な対話
 - **多言語サポート**: 15以上の言語に対応
 - **文脈認識**: 会話履歴を維持した文脈に応じた応答
-- **高度な推論**: GPT-4の機能を活用したインテリジェントな対話
-- **モデル選択**: GPT-4o、GPT-4o-mini、GPT-4-turbo、GPT-3.5-turboから選択可能
+- **高度な推論**: GPT-5の組み込み思考・推論機能を活用したインテリジェントな対話
+- **モデル選択**: GPT-5、GPT-5-mini、GPT-5-nanoからニーズと予算に応じて選択可能
 
 ### 日本語対応の特徴
 
@@ -229,7 +245,7 @@ https://github.com/[あなたのユーザー名]/alexa-genai.git
 #### モデルの変更
 `lambda/lambda_function.py`でAIモデルを変更できます：
 ```python
-# 利用可能なGPTモデルから選択：
+# 3つのGPT-5バリアントから選択：
 model = "gpt-5-mini"  # デフォルト: バランス型
 
 # 利用可能なモデル：

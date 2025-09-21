@@ -12,7 +12,11 @@ import re
 # Set your OpenAI API key
 api_key = "YOUR_API_KEY"
 
-model = "gpt-4o-mini"
+# GPT-5 model - choose from gpt-5, gpt-5-mini, or gpt-5-nano
+# gpt-5: Best performance ($1.25/1M input, $10/1M output)
+# gpt-5-mini: Balanced ($0.25/1M input, $2/1M output)
+# gpt-5-nano: Most economical ($0.05/1M input, $0.40/1M output)
+model = "gpt-5-mini"  # Using gpt-5-mini for balanced performance and cost
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -26,7 +30,7 @@ class LaunchRequestHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "Chat G.P.T. mode activated"
+        speak_output = "GenAI assistant with GPT-5 activated. How can I help you today?"
 
         session_attr = handler_input.attributes_manager.session_attributes
         session_attr["chat_history"] = []
@@ -128,7 +132,7 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "Leaving Chat G.P.T. mode"
+        speak_output = "Thank you for using GenAI assistant. Goodbye!"
 
         return (
             handler_input.response_builder
@@ -194,7 +198,7 @@ def generate_followup_questions(conversation_context, query, response, count=2):
         messages.append({"role": "user", "content": "Follow-up questions (separated by |):"})
         
         data = {
-            "model": "gpt-3.5-turbo",  # Using a faster model for this
+            "model": "gpt-5-nano",  # Using lightweight model for quick follow-up generation
             "messages": messages,
             "max_tokens": 50,
             "temperature": 0.7
@@ -235,6 +239,7 @@ def generate_gpt_response(chat_history, new_question, is_followup=False):
     if is_followup:
         system_message += " This is a follow-up question to the previous conversation. Maintain context without repeating information already provided."
     
+    # Enhanced system message for GPT-5's advanced capabilities
     messages = [{"role": "system", "content": system_message}]
     
     # Include relevant conversation history
@@ -250,7 +255,9 @@ def generate_gpt_response(chat_history, new_question, is_followup=False):
     data = {
         "model": model,
         "messages": messages,
-        "max_tokens": 300
+        "max_tokens": 300,
+        "temperature": 0.7,  # Balanced creativity and accuracy
+        "reasoning_effort": "medium"  # GPT-5 specific parameter for balanced reasoning
     }
     
     try:

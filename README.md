@@ -91,21 +91,32 @@ In the "Build" section, navigate to the "JSON Editor" tab and replace with the c
 
 ## Features
 
+- **Powered by GPT-5**: Utilizes OpenAI's latest GPT-5 models for state-of-the-art AI responses
 - **Multi-language Support**: Works in 15+ languages including English, Spanish, French, German, Japanese, and more
 - **Context Awareness**: Maintains conversation history for contextual responses
+- **Advanced Reasoning**: Leverages GPT-5's reasoning capabilities for more intelligent interactions
 - **Customizable**: Easy to modify prompts and behavior
-- **Efficient**: Uses GPT-4o-mini for fast, cost-effective responses
+- **Model Options**: Choose between GPT-5, GPT-5-mini, or GPT-5-nano based on your needs
 
 ## Configuration
 
 ### Customizing the Model
 You can change the AI model in `lambda/lambda_function.py`:
 ```python
+# Choose from three GPT-5 variants:
+model = "gpt-5-mini"  # Default: balanced performance and cost
+
+# Available models:
+# - "gpt-5": Best performance ($1.25/1M input, $10/1M output)
+# - "gpt-5-mini": Balanced ($0.25/1M input, $2/1M output)
+# - "gpt-5-nano": Most economical ($0.05/1M input, $0.40/1M output)
+
 data = {
-    "model": "gpt-4o-mini",  # Change to "gpt-4", "gpt-3.5-turbo", etc.
+    "model": model,
     "messages": messages,
     "max_tokens": 300,
-    "temperature": 0.5
+    "temperature": 0.7,
+    "reasoning_effort": "medium"  # GPT-5 specific: minimal, low, medium, or high
 }
 ```
 
@@ -140,4 +151,4 @@ For issues, questions, or suggestions, please open an issue on GitHub.
 
 - Original concept inspired by alexa-gpt
 - Built with the Alexa Skills Kit (ASK) SDK
-- Powered by OpenAI's GPT models
+- Powered by OpenAI's GPT-5 models (2025)

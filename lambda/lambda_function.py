@@ -317,7 +317,7 @@ def generate_followup_questions(conversation_context, query, response, locale='e
         data = {
             "model": "gpt-5-nano",  # Using lightweight model for quick follow-up generation
             "messages": messages,
-            "max_tokens": 50,
+            "max_completion_tokens": 50,  # Updated parameter name for GPT-5
             "temperature": 0.7
         }
 
@@ -388,7 +388,7 @@ def generate_gpt_response(chat_history, new_question, is_followup=False, locale=
     data = {
         "model": model,
         "messages": messages,
-        "max_tokens": 300,
+        "max_completion_tokens": 300,  # Updated parameter name for GPT-5
         "temperature": 0.7,  # Balanced creativity and accuracy
         "reasoning_effort": "medium"  # GPT-5 specific parameter for balanced reasoning
     }

@@ -65,9 +65,26 @@ def generate_gpt_response(query, locale='ja'):
 
         if response.ok:
             result = response.json()
-            output_text = result.get('output_text', '')
-            logger.info(f"GPT-5 response received: {output_text[:100]}...")
-            return output_text if output_text else "申し訳ありません。応答を生成できませんでした。"
+
+            # GPT-5のレスポンス構造に対応
+            # output[1].content[0].text に実際のテキストがある
+            output_text = ""
+            try:
+                if 'output' in result and len(result['output']) > 1:
+                    message = result['output'][1]  # 2番目の要素がメッセージ
+                    if 'content' in message and len(message['content']) > 0:
+                        output_text = message['content'][0].get('text', '')
+
+                # 旧形式のフォールバック
+                if not output_text:
+                    output_text = result.get('output_text', '')
+
+                logger.info(f"GPT-5 response received: {output_text[:100] if output_text else 'No text'}...")
+                return output_text if output_text else "申し訳ありません。応答を生成できませんでした。"
+            except Exception as e:
+                logger.error(f"Error parsing GPT-5 response: {e}")
+                logger.error(f"Response structure: {json.dumps(result, ensure_ascii=False)[:500]}")
+                return "応答の解析中にエラーが発生しました。"
         else:
             logger.error(f"API Error {response.status_code}: {response.text}")
             return f"APIエラーが発生しました。（エラーコード: {response.status_code}）"

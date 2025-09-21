@@ -1,0 +1,70 @@
+{
+    "interactionModel": {
+        "languageModel": {
+            "invocationName": "じぇない",
+            "intents": [
+                {
+                    "name": "GptQueryIntent",
+                    "slots": [
+                        {
+                            "name": "query",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "{query} について教えて",
+                        "{query} を教えて",
+                        "{query} は何",
+                        "{query} って何",
+                        "{query} を説明して",
+                        "{query} について",
+                        "{query} はどういうこと",
+                        "{query} を知りたい",
+                        "{query} について知りたい",
+                        "{query} を調べて",
+                        "{query} について調べて",
+                        "{query} を検索して",
+                        "{query} について説明して",
+                        "{query} を解説して",
+                        "{query} について解説して",
+                        "{query} はどう",
+                        "{query} はどうなの",
+                        "{query} はどうなってる",
+                        "{query} について聞きたい",
+                        "{query} を聞きたい"
+                    ]
+                },
+                {
+                    "name": "TestIntent",
+                    "slots": [],
+                    "samples": [
+                        "テスト",
+                        "こんにちは",
+                        "動作確認"
+                    ]
+                },
+                {
+                    "name": "AMAZON.FallbackIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.CancelIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.HelpIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.StopIntent",
+                    "samples": []
+                },
+                {
+                    "name": "AMAZON.NavigateHomeIntent",
+                    "samples": []
+                }
+            ],
+            "types": []
+        }
+    }
+}

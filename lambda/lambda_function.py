@@ -21,19 +21,75 @@ model = "gpt-5-mini"  # Using gpt-5-mini for balanced performance and cost
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+def detect_language(text):
+    """Simple language detection based on character analysis"""
+    if not text:
+        return 'en'
+
+    # Check for Japanese characters (Hiragana, Katakana, Kanji)
+    japanese_pattern = re.compile(r'[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]')
+    if japanese_pattern.search(text):
+        return 'ja'
+
+    # Default to English
+    return 'en'
+
+def get_localized_message(key, locale='en'):
+    """Get localized messages based on locale"""
+    messages = {
+        'en': {
+            'welcome': "GenAI assistant with GPT-5 activated. How can I help you today?",
+            'goodbye': "Thank you for using GenAI assistant. Goodbye!",
+            'error': "Sorry, I had trouble doing what you asked. Please try again.",
+            'reprompt': "You can ask me another question or say stop to end the conversation.",
+            'reprompt_with_followup': "You can ask me another question, say 'next' to hear more suggestions, or say stop to end the conversation.",
+            'followup_intro': "You could ask: ",
+            'followup_outro': ". What would you like to know?",
+            'clear_context': "I've cleared our conversation history. What would you like to talk about?",
+            'default_followup_1': "Tell me more",
+            'default_followup_2': "Give me an example"
+        },
+        'ja': {
+            'welcome': "GPT-5を搭載したGenAIアシスタントが起動しました。何かお手伝いしましょうか？",
+            'goodbye': "GenAIアシスタントをご利用いただきありがとうございました。さようなら！",
+            'error': "申し訳ございません。エラーが発生しました。もう一度お試しください。",
+            'reprompt': "他に質問がありましたらどうぞ。終了する場合は「ストップ」と言ってください。",
+            'reprompt_with_followup': "他に質問がありましたらどうぞ。提案を聞く場合は「次」、終了する場合は「ストップ」と言ってください。",
+            'followup_intro': "こんな質問はいかがですか: ",
+            'followup_outro': "。何か知りたいことはありますか？",
+            'clear_context': "会話履歴をクリアしました。何についてお話ししましょうか？",
+            'default_followup_1': "詳しく教えて",
+            'default_followup_2': "例を教えて"
+        }
+    }
+
+    locale_messages = messages.get(locale, messages['en'])
+    return locale_messages.get(key, messages['en'][key])
+
+def get_device_locale(handler_input):
+    """Get the device locale from the request"""
+    try:
+        locale = handler_input.request_envelope.request.locale
+        # Extract language code (e.g., 'ja' from 'ja-JP')
+        lang_code = locale.split('-')[0] if locale else 'en'
+        return lang_code if lang_code in ['ja', 'en'] else 'en'
+    except:
+        return 'en'
+
 class LaunchRequestHandler(AbstractRequestHandler):
     """Handler for Skill Launch."""
     def can_handle(self, handler_input):
         # type: (HandlerInput) -> bool
-
         return ask_utils.is_request_type("LaunchRequest")(handler_input)
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "GenAI assistant with GPT-5 activated. How can I help you today?"
+        locale = get_device_locale(handler_input)
+        speak_output = get_localized_message('welcome', locale)
 
         session_attr = handler_input.attributes_manager.session_attributes
         session_attr["chat_history"] = []
+        session_attr["device_locale"] = locale
 
         return (
             handler_input.response_builder
@@ -53,16 +109,25 @@ class GptQueryIntentHandler(AbstractRequestHandler):
         query = handler_input.request_envelope.request.intent.slots["query"].value
 
         session_attr = handler_input.attributes_manager.session_attributes
+
+        # Get or detect language
+        device_locale = session_attr.get("device_locale", get_device_locale(handler_input))
+        query_lang = detect_language(query)
+
+        # Use query language if Japanese is detected, otherwise use device locale
+        locale = query_lang if query_lang == 'ja' else device_locale
+        session_attr["current_locale"] = locale
+
         if "chat_history" not in session_attr:
             session_attr["chat_history"] = []
             session_attr["last_context"] = None
-        
+
         # Process the query to determine if it's a follow-up question
-        processed_query, is_followup = process_followup_question(query, session_attr.get("last_context"))
-        
+        processed_query, is_followup = process_followup_question(query, session_attr.get("last_context"), locale)
+
         # Generate response with enhanced context handling
-        response_data = generate_gpt_response(session_attr["chat_history"], processed_query, is_followup)
-        
+        response_data = generate_gpt_response(session_attr["chat_history"], processed_query, is_followup, locale)
+
         # Handle the response data which could be a tuple or string
         if isinstance(response_data, tuple) and len(response_data) == 2:
             response_text, followup_questions = response_data
@@ -70,33 +135,35 @@ class GptQueryIntentHandler(AbstractRequestHandler):
             # Fallback for error cases
             response_text = str(response_data)
             followup_questions = []
-        
+
         # Store follow-up questions in the session
         session_attr["followup_questions"] = followup_questions
-        
+
         # Update the conversation history with just the response text, not the questions
         session_attr["chat_history"].append((query, response_text))
         session_attr["last_context"] = extract_context(query, response_text)
-        
+
         # Format the response with follow-up suggestions if available
         response = response_text
         if followup_questions and len(followup_questions) > 0:
             # Add a short pause before the suggestions
             response += " <break time=\"0.5s\"/> "
-            response += "You could ask: "
-            # Join with 'or' for the last question
+            response += get_localized_message('followup_intro', locale)
+            # Join with appropriate connector based on language
+            connector = "、" if locale == 'ja' else ", "
+            last_connector = "、または" if locale == 'ja' else ", or "
+
             if len(followup_questions) > 1:
-                response += ", ".join([f"'{q}'" for q in followup_questions[:-1]])
-                response += f", or '{followup_questions[-1]}'"
+                response += connector.join([f"「{q}」" if locale == 'ja' else f"'{q}'" for q in followup_questions[:-1]])
+                response += f"{last_connector}「{followup_questions[-1]}」" if locale == 'ja' else f"{last_connector}'{followup_questions[-1]}'"
             else:
-                response += f"'{followup_questions[0]}'"
-            response += ". <break time=\"0.5s\"/> What would you like to know?"
-        
-        # Prepare response with reprompt that includes the follow-up questions
-        reprompt_text = "You can ask me another question or say stop to end the conversation."
-        if 'followup_questions' in session_attr and session_attr['followup_questions']:
-            reprompt_text = "You can ask me another question, say 'next' to hear more suggestions, or say stop to end the conversation."
-        
+                response += f"「{followup_questions[0]}」" if locale == 'ja' else f"'{followup_questions[0]}'"
+            response += get_localized_message('followup_outro', locale)
+
+        # Prepare response with reprompt
+        reprompt_key = 'reprompt_with_followup' if followup_questions else 'reprompt'
+        reprompt_text = get_localized_message(reprompt_key, locale)
+
         return (
             handler_input.response_builder
                 .speak(response)
@@ -114,7 +181,9 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
         # type: (HandlerInput, Exception) -> Response
         logger.error(exception, exc_info=True)
 
-        speak_output = "Sorry, I had trouble doing what you asked. Please try again."
+        session_attr = handler_input.attributes_manager.session_attributes
+        locale = session_attr.get("current_locale", get_device_locale(handler_input))
+        speak_output = get_localized_message('error', locale)
 
         return (
             handler_input.response_builder
@@ -132,7 +201,9 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        speak_output = "Thank you for using GenAI assistant. Goodbye!"
+        session_attr = handler_input.attributes_manager.session_attributes
+        locale = session_attr.get("current_locale", get_device_locale(handler_input))
+        speak_output = get_localized_message('goodbye', locale)
 
         return (
             handler_input.response_builder
@@ -140,10 +211,10 @@ class CancelOrStopIntentHandler(AbstractRequestHandler):
                 .response
         )
 
-def process_followup_question(question, last_context):
+def process_followup_question(question, last_context, locale='en'):
     """Processes a question to determine if it's a follow-up and enhances it with context if needed"""
-    # Common follow-up indicators
-    followup_patterns = [
+    # Common follow-up indicators for English
+    en_followup_patterns = [
         r'^(what|how|why|when|where|who|which)\s+(about|is|are|was|were|do|does|did|can|could|would|should|will)\s',
         r'^(and|but|so|then|also)\s',
         r'^(can|could|would|should|will)\s+(you|it|they|we)\s',
@@ -151,26 +222,33 @@ def process_followup_question(question, last_context):
         r'^(tell me more|elaborate|explain further)\s*',
         r'^(why|how)\?*$'
     ]
-    
+
+    # Common follow-up indicators for Japanese
+    ja_followup_patterns = [
+        r'(それ|これ|あれ)(は|って|の)',
+        r'^(でも|そして|また|あと|それから)',
+        r'(について|に関して|のこと)',
+        r'^(なぜ|どうして|どう|どのように)',
+        r'(もっと|詳しく|具体的に)',
+        r'(例えば|たとえば|例を)'
+    ]
+
+    followup_patterns = ja_followup_patterns if locale == 'ja' else en_followup_patterns
     is_followup = False
-    
+
     # Check if the question matches any follow-up patterns
     for pattern in followup_patterns:
-        if re.search(pattern, question.lower()):
+        if re.search(pattern, question.lower() if locale == 'en' else question):
             is_followup = True
             break
-    
-    # If it's a follow-up and we have context, we don't need to modify the question
-    # The context will be handled in the generate_gpt_response function
+
     return question, is_followup
 
 def extract_context(question, response):
     """Extracts the main context from a Q&A pair for future reference"""
-    # This is a simple implementation that just returns the question and response
-    # In a more advanced implementation, you could use NLP to extract key entities
     return {"question": question, "response": response}
 
-def generate_followup_questions(conversation_context, query, response, count=2):
+def generate_followup_questions(conversation_context, query, response, locale='en', count=2):
     """Generates concise follow-up questions based on the conversation context"""
     try:
         headers = {
@@ -178,80 +256,104 @@ def generate_followup_questions(conversation_context, query, response, count=2):
             "Content-Type": "application/json"
         }
         url = "https://api.openai.com/v1/chat/completions"
-        
-        # Prepare a focused prompt for brief follow-ups
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant that suggests short follow-up questions."},
-            {"role": "user", "content": """Based on the conversation, suggest 2 very short follow-up questions (max 4 words each). 
+
+        # Prepare prompt based on language
+        if locale == 'ja':
+            system_content = "あなたは短いフォローアップ質問を提案する日本語アシスタントです。"
+            user_content = """会話に基づいて、とても短いフォローアップ質問を2つ提案してください（各5文字以内）。
+            シンプルで直接的にしてください。質問のみを'|'で区切って返してください。
+            例: 理由は？|具体例は？"""
+        else:
+            system_content = "You are a helpful assistant that suggests short follow-up questions."
+            user_content = """Based on the conversation, suggest 2 very short follow-up questions (max 4 words each).
             Make them direct and simple. Return ONLY the questions separated by '|'.
-            Example: What's the capital?|How big is it?"""}
+            Example: What's the capital?|How big is it?"""
+
+        messages = [
+            {"role": "system", "content": system_content},
+            {"role": "user", "content": user_content}
         ]
-        
+
         # Add conversation context
         if conversation_context:
             last_q, last_a = conversation_context[-1]
-            messages.append({"role": "user", "content": f"Previous Q: {last_q}"})
+            q_prefix = "前の質問: " if locale == 'ja' else "Previous Q: "
+            messages.append({"role": "user", "content": f"{q_prefix}{last_q}"})
             messages.append({"role": "assistant", "content": last_a})
-        
-        messages.append({"role": "user", "content": f"Current Q: {query}"})
+
+        q_current = "現在の質問: " if locale == 'ja' else "Current Q: "
+        q_prompt = "フォローアップ質問（|で区切る）:" if locale == 'ja' else "Follow-up questions (separated by |):"
+
+        messages.append({"role": "user", "content": f"{q_current}{query}"})
         messages.append({"role": "assistant", "content": response})
-        messages.append({"role": "user", "content": "Follow-up questions (separated by |):"})
-        
+        messages.append({"role": "user", "content": q_prompt})
+
         data = {
             "model": "gpt-5-nano",  # Using lightweight model for quick follow-up generation
             "messages": messages,
             "max_tokens": 50,
             "temperature": 0.7
         }
-        
+
         response = requests.post(url, headers=headers, data=json.dumps(data), timeout=3)
         if response.ok:
             questions_text = response.json()['choices'][0]['message']['content'].strip()
             # Clean and split the response
-            questions = [q.strip().rstrip('?') for q in questions_text.split('|') if q.strip()]
-            # Ensure we have valid questions
-            questions = [q for q in questions if len(q.split()) <= 4 and len(q) > 0][:2]
-            
+            questions = [q.strip().rstrip('?？') for q in questions_text.split('|') if q.strip()]
+
+            # Validate questions based on language
+            if locale == 'ja':
+                questions = [q for q in questions if len(q) <= 10 and len(q) > 0][:2]
+            else:
+                questions = [q for q in questions if len(q.split()) <= 4 and len(q) > 0][:2]
+
             # If we don't have enough questions, provide defaults
             if len(questions) < 2:
-                questions = ["Tell me more", "Give me an example"]
-                
-            logger.info(f"Generated follow-up questions: {questions}")
+                questions = [get_localized_message('default_followup_1', locale),
+                           get_localized_message('default_followup_2', locale)]
+
+            logger.info(f"Generated follow-up questions ({locale}): {questions}")
             return questions
-            
+
         logger.error(f"API Error: {response.text}")
-        return ["Tell me more", "Give me an example"]
-        
+        return [get_localized_message('default_followup_1', locale),
+                get_localized_message('default_followup_2', locale)]
+
     except Exception as e:
         logger.error(f"Error in generate_followup_questions: {str(e)}")
-        return ["Tell me more", "Give me an example"]
+        return [get_localized_message('default_followup_1', locale),
+                get_localized_message('default_followup_2', locale)]
 
-def generate_gpt_response(chat_history, new_question, is_followup=False):
+def generate_gpt_response(chat_history, new_question, is_followup=False, locale='en'):
     """Generates a GPT response to a question with enhanced context handling"""
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json"
     }
     url = "https://api.openai.com/v1/chat/completions"
-    
-    # Create a more informative system message based on whether this is a follow-up
-    system_message = "You are a helpful assistant. Answer in 50 words or less."
-    if is_followup:
-        system_message += " This is a follow-up question to the previous conversation. Maintain context without repeating information already provided."
-    
+
+    # Create system message based on language and context
+    if locale == 'ja':
+        system_message = "あなたは親切なアシスタントです。50文字以内で簡潔に答えてください。"
+        if is_followup:
+            system_message += " これは前の会話のフォローアップ質問です。すでに提供した情報を繰り返さず、文脈を維持してください。"
+    else:
+        system_message = "You are a helpful assistant. Answer in 50 words or less."
+        if is_followup:
+            system_message += " This is a follow-up question to the previous conversation. Maintain context without repeating information already provided."
+
     # Enhanced system message for GPT-5's advanced capabilities
     messages = [{"role": "system", "content": system_message}]
-    
+
     # Include relevant conversation history
-    # For follow-ups, we include more context. For new questions, we limit to save tokens
     history_limit = 10 if not is_followup else 5
     for question, answer in chat_history[-history_limit:]:
         messages.append({"role": "user", "content": question})
         messages.append({"role": "assistant", "content": answer})
-    
+
     # Add the new question
     messages.append({"role": "user", "content": new_question})
-    
+
     data = {
         "model": model,
         "messages": messages,
@@ -259,26 +361,26 @@ def generate_gpt_response(chat_history, new_question, is_followup=False):
         "temperature": 0.7,  # Balanced creativity and accuracy
         "reasoning_effort": "medium"  # GPT-5 specific parameter for balanced reasoning
     }
-    
+
     try:
         response = requests.post(url, headers=headers, data=json.dumps(data))
         response_data = response.json()
         if response.ok:
             response_text = response_data['choices'][0]['message']['content']
-            
+
             # Generate follow-up questions for the response
             try:
-                # Always try to generate follow-up questions
                 followup_questions = generate_followup_questions(
-                    chat_history + [(new_question, response_text)], 
-                    new_question, 
-                    response_text
+                    chat_history + [(new_question, response_text)],
+                    new_question,
+                    response_text,
+                    locale
                 )
                 logger.info(f"Generated follow-up questions: {followup_questions}")
             except Exception as e:
                 logger.error(f"Error generating follow-up questions: {str(e)}")
                 followup_questions = []
-            
+
             return response_text, followup_questions
         else:
             return f"Error {response.status_code}: {response_data['error']['message']}", []
@@ -295,11 +397,13 @@ class ClearContextIntentHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
         session_attr = handler_input.attributes_manager.session_attributes
+        locale = session_attr.get("current_locale", get_device_locale(handler_input))
+
         session_attr["chat_history"] = []
         session_attr["last_context"] = None
-        
-        speak_output = "I've cleared our conversation history. What would you like to talk about?"
-        
+
+        speak_output = get_localized_message('clear_context', locale)
+
         return (
             handler_input.response_builder
                 .speak(speak_output)

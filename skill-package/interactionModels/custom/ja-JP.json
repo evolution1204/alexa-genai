@@ -1,7 +1,7 @@
 {
     "interactionModel": {
         "languageModel": {
-            "invocationName": "jenai",
+            "invocationName": "じぇない",
             "intents": [
                 {
                     "name": "GptQueryIntent",

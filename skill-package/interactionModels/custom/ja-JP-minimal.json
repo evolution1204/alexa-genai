@@ -1,7 +1,7 @@
 {
     "interactionModel": {
         "languageModel": {
-            "invocationName": "gen ai",
+            "invocationName": "じぇない",
             "intents": [
                 {
                     "name": "GptQueryIntent",
@@ -12,7 +12,9 @@
                         }
                     ],
                     "samples": [
-                        "{query}"
+                        "{query} について教えて",
+                        "{query} を教えて",
+                        "{query} は何"
                     ]
                 },
                 {
@@ -25,10 +27,6 @@
                 },
                 {
                     "name": "AMAZON.StopIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.NavigateHomeIntent",
                     "samples": []
                 }
             ],

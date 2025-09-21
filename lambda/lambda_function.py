@@ -118,70 +118,92 @@ class GptQueryIntentHandler(AbstractRequestHandler):
 
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
-        query = handler_input.request_envelope.request.intent.slots["query"].value
+        try:
+            logger.info("=== GptQueryIntentHandler START ===")
+            query = handler_input.request_envelope.request.intent.slots["query"].value
+            logger.info(f"Query: {query}")
 
-        session_attr = handler_input.attributes_manager.session_attributes
+            session_attr = handler_input.attributes_manager.session_attributes
 
-        # Get or detect language
-        device_locale = session_attr.get("device_locale", get_device_locale(handler_input))
-        query_lang = detect_language(query)
+            # Get or detect language
+            device_locale = session_attr.get("device_locale", get_device_locale(handler_input))
+            query_lang = detect_language(query)
 
-        # Use query language if Japanese is detected, otherwise use device locale
-        locale = query_lang if query_lang == 'ja' else device_locale
-        session_attr["current_locale"] = locale
+            # Use query language if Japanese is detected, otherwise use device locale
+            locale = query_lang if query_lang == 'ja' else device_locale
+            session_attr["current_locale"] = locale
+            logger.info(f"Locale: {locale}")
 
-        if "chat_history" not in session_attr:
-            session_attr["chat_history"] = []
-            session_attr["last_context"] = None
+            if "chat_history" not in session_attr:
+                session_attr["chat_history"] = []
+                session_attr["last_context"] = None
 
-        # Process the query to determine if it's a follow-up question
-        processed_query, is_followup = process_followup_question(query, session_attr.get("last_context"), locale)
+            # Process the query to determine if it's a follow-up question
+            processed_query, is_followup = process_followup_question(query, session_attr.get("last_context"), locale)
+            logger.info(f"Processed query: {processed_query}, is_followup: {is_followup}")
 
-        # Generate response with enhanced context handling
-        response_data = generate_gpt_response(session_attr["chat_history"], processed_query, is_followup, locale)
+            # Generate response with enhanced context handling
+            logger.info("Calling generate_gpt_response...")
+            response_data = generate_gpt_response(session_attr["chat_history"], processed_query, is_followup, locale)
+            logger.info(f"Response data type: {type(response_data)}")
 
-        # Handle the response data which could be a tuple or string
-        if isinstance(response_data, tuple) and len(response_data) == 2:
-            response_text, followup_questions = response_data
-        else:
-            # Fallback for error cases
-            response_text = str(response_data)
-            followup_questions = []
-
-        # Store follow-up questions in the session
-        session_attr["followup_questions"] = followup_questions
-
-        # Update the conversation history with just the response text, not the questions
-        session_attr["chat_history"].append((query, response_text))
-        session_attr["last_context"] = extract_context(query, response_text)
-
-        # Format the response with follow-up suggestions if available
-        response = response_text
-        if followup_questions and len(followup_questions) > 0:
-            # Add a short pause before the suggestions
-            response += " <break time=\"0.5s\"/> "
-            response += get_localized_message('followup_intro', locale)
-            # Join with appropriate connector based on language
-            connector = "、" if locale == 'ja' else ", "
-            last_connector = "、または" if locale == 'ja' else ", or "
-
-            if len(followup_questions) > 1:
-                response += connector.join([f"「{q}」" if locale == 'ja' else f"'{q}'" for q in followup_questions[:-1]])
-                response += f"{last_connector}「{followup_questions[-1]}」" if locale == 'ja' else f"{last_connector}'{followup_questions[-1]}'"
+            # Handle the response data which could be a tuple or string
+            if isinstance(response_data, tuple) and len(response_data) == 2:
+                response_text, followup_questions = response_data
             else:
-                response += f"「{followup_questions[0]}」" if locale == 'ja' else f"'{followup_questions[0]}'"
-            response += get_localized_message('followup_outro', locale)
+                # Fallback for error cases
+                response_text = str(response_data)
+                followup_questions = []
 
-        # Prepare response with reprompt
-        reprompt_key = 'reprompt_with_followup' if followup_questions else 'reprompt'
-        reprompt_text = get_localized_message(reprompt_key, locale)
+            logger.info(f"Response text: {response_text[:100]}...")
 
-        return (
-            handler_input.response_builder
-                .speak(response)
-                .ask(reprompt_text)
-                .response
-        )
+            # Store follow-up questions in the session
+            session_attr["followup_questions"] = followup_questions
+
+            # Update the conversation history with just the response text, not the questions
+            session_attr["chat_history"].append((query, response_text))
+            session_attr["last_context"] = extract_context(query, response_text)
+
+            # Format the response with follow-up suggestions if available
+            response = response_text
+            if followup_questions and len(followup_questions) > 0:
+                # Add a short pause before the suggestions
+                response += " <break time=\"0.5s\"/> "
+                response += get_localized_message('followup_intro', locale)
+                # Join with appropriate connector based on language
+                connector = "、" if locale == 'ja' else ", "
+                last_connector = "、または" if locale == 'ja' else ", or "
+
+                if len(followup_questions) > 1:
+                    response += connector.join([f"「{q}」" if locale == 'ja' else f"'{q}'" for q in followup_questions[:-1]])
+                    response += f"{last_connector}「{followup_questions[-1]}」" if locale == 'ja' else f"{last_connector}'{followup_questions[-1]}'"
+                else:
+                    response += f"「{followup_questions[0]}」" if locale == 'ja' else f"'{followup_questions[0]}'"
+                response += get_localized_message('followup_outro', locale)
+
+            # Prepare response with reprompt
+            reprompt_key = 'reprompt_with_followup' if followup_questions else 'reprompt'
+            reprompt_text = get_localized_message(reprompt_key, locale)
+
+            logger.info("=== GptQueryIntentHandler SUCCESS ===")
+
+            return (
+                handler_input.response_builder
+                    .speak(response)
+                    .ask(reprompt_text)
+                    .response
+            )
+        except Exception as e:
+            logger.error(f"ERROR in GptQueryIntentHandler: {str(e)}", exc_info=True)
+            # Return a user-friendly error message
+            locale = handler_input.attributes_manager.session_attributes.get("current_locale", get_device_locale(handler_input))
+            error_msg = get_localized_message('error', locale)
+            return (
+                handler_input.response_builder
+                    .speak(error_msg)
+                    .ask(get_localized_message('reprompt', locale))
+                    .response
+            )
 
 class CatchAllExceptionHandler(AbstractExceptionHandler):
     """Generic error handling to capture any syntax or routing errors."""
@@ -357,6 +379,8 @@ def generate_followup_questions(conversation_context, query, response, locale='e
 
 def generate_gpt_response(chat_history, new_question, is_followup=False, locale='en'):
     """Generates a GPT response to a question with enhanced context handling"""
+    logger.info(f"=== generate_gpt_response START === locale={locale}, model={model}")
+
     if not api_key:
         error_msg = "API key not configured. Please set your OpenAI API key in the Lambda function." if locale == 'en' else "APIキーが設定されていません。Lambda関数にOpenAI APIキーを設定してください。"
         logger.error("OpenAI API key not configured")
@@ -368,6 +392,7 @@ def generate_gpt_response(chat_history, new_question, is_followup=False, locale=
     }
     # GPT-5 uses Responses API, not Chat Completions API
     url = "https://api.openai.com/v1/responses"
+    logger.info(f"Using GPT-5 Responses API: {url}")
 
     # Build context from chat history
     context = ""
@@ -405,11 +430,19 @@ def generate_gpt_response(chat_history, new_question, is_followup=False, locale=
     }
 
     try:
+        logger.info(f"Sending request to GPT-5 with input length: {len(full_input)}")
+        logger.info(f"Request data: {json.dumps(data, ensure_ascii=False)[:500]}...")
+
         response = requests.post(url, headers=headers, data=json.dumps(data))
+        logger.info(f"Response status: {response.status_code}")
+
         response_data = response.json()
+        logger.info(f"Response data keys: {response_data.keys()}")
+
         if response.ok:
             # GPT-5 Responses API returns 'output_text' instead of 'choices'
             response_text = response_data.get('output_text', '')
+            logger.info(f"Response text received: {response_text[:100]}...")
 
             # Also log reasoning tokens if available
             if 'reasoning_text' in response_data:
@@ -428,12 +461,15 @@ def generate_gpt_response(chat_history, new_question, is_followup=False, locale=
                 logger.error(f"Error generating follow-up questions: {str(e)}")
                 followup_questions = []
 
+            logger.info("=== generate_gpt_response SUCCESS ===")
             return response_text, followup_questions
         else:
             error_msg = response_data.get('error', {}).get('message', 'Unknown error')
+            logger.error(f"API Error {response.status_code}: {error_msg}")
+            logger.error(f"Full error response: {json.dumps(response_data, ensure_ascii=False)}")
             return f"Error {response.status_code}: {error_msg}", []
     except Exception as e:
-        logger.error(f"Error generating response: {str(e)}")
+        logger.error(f"Error generating response: {str(e)}", exc_info=True)
         return f"Error generating response: {str(e)}", []
 
 class ClearContextIntentHandler(AbstractRequestHandler):

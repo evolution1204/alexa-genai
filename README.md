@@ -95,19 +95,19 @@ In the "Build" section, navigate to the "JSON Editor" tab and replace with the c
 
 ## Features
 
-- **Powered by GPT-5**: Utilizes OpenAI's latest GPT-5 models for state-of-the-art AI responses
+- **Powered by GPT-4**: Utilizes OpenAI's latest GPT-4 models for state-of-the-art AI responses
 - **Multi-language Support**: Works in 15+ languages including English, Spanish, French, German, Japanese, and more
 - **Context Awareness**: Maintains conversation history for contextual responses
-- **Advanced Reasoning**: Leverages GPT-5's reasoning capabilities for more intelligent interactions
+- **Advanced Reasoning**: Leverages GPT-4's capabilities for more intelligent interactions
 - **Customizable**: Easy to modify prompts and behavior
-- **Model Options**: Choose between GPT-5, GPT-5-mini, or GPT-5-nano based on your needs
+- **Model Options**: Choose between GPT-4o, GPT-4o-mini, GPT-4-turbo, or GPT-3.5-turbo based on your needs
 
 ## Configuration
 
 ### Customizing the Model
 You can change the AI model in `lambda/lambda_function.py`:
 ```python
-# Choose from three GPT-5 variants:
+# Choose from available GPT models:
 model = "gpt-5-mini"  # Default: balanced performance and cost
 
 # Available models:
@@ -120,7 +120,7 @@ data = {
     "messages": messages,
     "max_tokens": 300,
     "temperature": 0.7,
-    "reasoning_effort": "medium"  # GPT-5 specific: minimal, low, medium, or high
+    "temperature": 0.7  # Control randomness: 0.0 to 2.0
 }
 ```
 
@@ -155,13 +155,13 @@ For issues, questions, or suggestions, please open an issue on GitHub.
 
 - Original concept inspired by alexa-gpt
 - Built with the Alexa Skills Kit (ASK) SDK
-- Powered by OpenAI's GPT-5 models (2025)
+- Powered by OpenAI's GPT-4 models
 
 ---
 
 ## <a name="japanese"></a>日本語
 
-AlexaにGPT-5による高度な生成AI機能を追加します。
+AlexaにGPT-4による高度な生成AI機能を追加します。
 
 このリポジトリには、OpenAI APIと統合して最先端の言語モデルを使用したインテリジェントで文脈を理解する応答を提供するAlexaスキルが含まれています。
 
@@ -210,12 +210,12 @@ https://github.com/[あなたのユーザー名]/alexa-genai.git
 
 ### 機能
 
-- **GPT-5搭載**: OpenAIの最新GPT-5モデルによる最先端のAI応答
+- **GPT-4搭載**: OpenAIの最新GPT-4モデルによる最先端のAI応答
 - **完全な日本語対応**: 自動言語検出と日本語での自然な対話
 - **多言語サポート**: 15以上の言語に対応
 - **文脈認識**: 会話履歴を維持した文脈に応じた応答
-- **高度な推論**: GPT-5の推論機能を活用したインテリジェントな対話
-- **モデル選択**: GPT-5、GPT-5-mini、GPT-5-nanoから選択可能
+- **高度な推論**: GPT-4の機能を活用したインテリジェントな対話
+- **モデル選択**: GPT-4o、GPT-4o-mini、GPT-4-turbo、GPT-3.5-turboから選択可能
 
 ### 日本語対応の特徴
 
@@ -229,7 +229,7 @@ https://github.com/[あなたのユーザー名]/alexa-genai.git
 #### モデルの変更
 `lambda/lambda_function.py`でAIモデルを変更できます：
 ```python
-# 3つのGPT-5バリアントから選択：
+# 利用可能なGPTモデルから選択：
 model = "gpt-5-mini"  # デフォルト: バランス型
 
 # 利用可能なモデル：

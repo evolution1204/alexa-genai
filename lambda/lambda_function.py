@@ -8,15 +8,17 @@ import requests
 import logging
 import json
 import re
+import os
 
-# Set your OpenAI API key
-api_key = "YOUR_API_KEY"
+# Get OpenAI API key from environment variable
+api_key = os.getenv("OPENAI_API_KEY", "")
 
-# GPT-5 model - choose from gpt-5, gpt-5-mini, or gpt-5-nano
-# gpt-5: Best performance ($1.25/1M input, $10/1M output)
-# gpt-5-mini: Balanced ($0.25/1M input, $2/1M output)
-# gpt-5-nano: Most economical ($0.05/1M input, $0.40/1M output)
-model = "gpt-5-mini"  # Using gpt-5-mini for balanced performance and cost
+# GPT model selection - choose based on your needs and budget
+# gpt-4o: Latest multimodal model with best performance
+# gpt-4o-mini: Cost-efficient small model for lightweight tasks
+# gpt-4-turbo: High performance with vision capabilities
+# gpt-3.5-turbo: Fast and cost-effective for most use cases
+model = "gpt-4o-mini"  # Using gpt-4o-mini for balanced performance and cost
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -289,7 +291,7 @@ def generate_followup_questions(conversation_context, query, response, locale='e
         messages.append({"role": "user", "content": q_prompt})
 
         data = {
-            "model": "gpt-5-nano",  # Using lightweight model for quick follow-up generation
+            "model": "gpt-3.5-turbo",  # Using lightweight model for quick follow-up generation
             "messages": messages,
             "max_tokens": 50,
             "temperature": 0.7
@@ -358,8 +360,7 @@ def generate_gpt_response(chat_history, new_question, is_followup=False, locale=
         "model": model,
         "messages": messages,
         "max_tokens": 300,
-        "temperature": 0.7,  # Balanced creativity and accuracy
-        "reasoning_effort": "medium"  # GPT-5 specific parameter for balanced reasoning
+        "temperature": 0.7  # Balanced creativity and accuracy
     }
 
     try:

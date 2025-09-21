@@ -472,7 +472,15 @@ class FallbackIntentHandler(AbstractRequestHandler):
         logger.info("In FallbackIntentHandler")
         session_attr = handler_input.attributes_manager.session_attributes
         locale = session_attr.get("device_locale", get_device_locale(handler_input))
-        speak_output = get_localized_message('error', locale)
+
+        # セッションが新しい場合は起動メッセージを返す（一時的な対処）
+        if handler_input.request_envelope.session.new:
+            logger.info("New session detected in FallbackIntent - treating as launch")
+            speak_output = get_localized_message('welcome', locale)
+            session_attr["chat_history"] = []
+            session_attr["device_locale"] = locale
+        else:
+            speak_output = get_localized_message('error', locale)
 
         return (
             handler_input.response_builder

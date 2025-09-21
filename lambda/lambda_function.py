@@ -8,10 +8,9 @@ import requests
 import logging
 import json
 import re
-import os
 
-# Get OpenAI API key from environment variable
-api_key = os.getenv("OPENAI_API_KEY", "")
+# Set your OpenAI API key
+api_key = "YOUR_API_KEY"
 
 # GPT-5 model - choose from gpt-5, gpt-5-mini, or gpt-5-nano
 # gpt-5: Best performance ($1.25/1M input, $10/1M output)

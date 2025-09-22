@@ -117,12 +117,25 @@ class LaunchRequestHandler(AbstractRequestHandler):
                 .response
         )
 
-class GptQueryIntentHandler(AbstractRequestHandler):
+class UniversalQueryIntentHandler(AbstractRequestHandler):
+    """Handle all query intents with the same logic"""
     def can_handle(self, handler_input):
-        return ask_utils.is_intent_name("GptQueryIntent")(handler_input)
+        intent_name = ask_utils.get_intent_name(handler_input)
+        # Handle all custom intents that have a query slot
+        return intent_name in [
+            "GptQueryIntent",
+            "CreativeIntent",
+            "EntertainmentIntent",
+            "EmotionalIntent",
+            "AnalysisIntent",
+            "HelpIntent",
+            "PhilosophicalIntent",
+            "PracticalIntent"
+        ]
 
     def handle(self, handler_input):
-        logger.info("=== GptQueryIntentHandler START ===")
+        intent_name = ask_utils.get_intent_name(handler_input)
+        logger.info(f"=== UniversalQueryIntentHandler START - Intent: {intent_name} ===")
 
         try:
             # Get query
@@ -133,8 +146,24 @@ class GptQueryIntentHandler(AbstractRequestHandler):
             session_attr = handler_input.attributes_manager.session_attributes
             locale = session_attr.get("locale", "ja")
 
-            # Generate response
-            speak_output = generate_gpt_response(query, locale)
+            # Add context based on intent type
+            context_prefix = ""
+            if intent_name == "CreativeIntent":
+                context_prefix = "創作的に答えて: " if locale == "ja" else "Be creative: "
+            elif intent_name == "EntertainmentIntent":
+                context_prefix = "楽しく答えて: " if locale == "ja" else "Be entertaining: "
+            elif intent_name == "EmotionalIntent":
+                context_prefix = "感情的に答えて: " if locale == "ja" else "Be emotional: "
+            elif intent_name == "AnalysisIntent":
+                context_prefix = "分析的に答えて: " if locale == "ja" else "Be analytical: "
+            elif intent_name == "PhilosophicalIntent":
+                context_prefix = "哲学的に答えて: " if locale == "ja" else "Be philosophical: "
+            elif intent_name == "PracticalIntent":
+                context_prefix = "実践的に答えて: " if locale == "ja" else "Be practical: "
+
+            # Generate response with context
+            full_query = context_prefix + query if context_prefix else query
+            speak_output = generate_gpt_response(full_query, locale)
 
             logger.info(f"Response: {speak_output}")
 
@@ -148,14 +177,40 @@ class GptQueryIntentHandler(AbstractRequestHandler):
             )
 
         except Exception as e:
-            logger.error(f"ERROR in GptQueryIntentHandler: {str(e)}", exc_info=True)
-            speak_output = "エラーが発生しました。もう一度お試しください。"
+            logger.error(f"ERROR in UniversalQueryIntentHandler: {str(e)}", exc_info=True)
+            locale = handler_input.attributes_manager.session_attributes.get("locale", "ja")
+            speak_output = "エラーが発生しました。もう一度お試しください。" if locale == "ja" else "An error occurred. Please try again."
+            ask_text = "他に質問はありますか？" if locale == "ja" else "Do you have any other questions?"
             return (
                 handler_input.response_builder
                     .speak(speak_output)
-                    .ask("他に質問はありますか？")
+                    .ask(ask_text)
                     .response
             )
+
+class TestIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return ask_utils.is_intent_name("TestIntent")(handler_input)
+
+    def handle(self, handler_input):
+        logger.info("=== TestIntentHandler START ===")
+
+        session_attr = handler_input.attributes_manager.session_attributes
+        locale = session_attr.get("locale", "ja")
+
+        if locale == "ja":
+            speak_output = "はい、正常に動作しています。GPT-5を使用して質問に答えます。"
+        else:
+            speak_output = "Yes, I'm working properly. I'm using GPT-5 to answer your questions."
+
+        ask_text = "何か質問はありますか？" if locale == "ja" else "What would you like to ask?"
+
+        return (
+            handler_input.response_builder
+                .speak(speak_output)
+                .ask(ask_text)
+                .response
+        )
 
 class HelpIntentHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
@@ -254,7 +309,8 @@ sb = SkillBuilder()
 
 # Add request handlers
 sb.add_request_handler(LaunchRequestHandler())
-sb.add_request_handler(GptQueryIntentHandler())
+sb.add_request_handler(UniversalQueryIntentHandler())
+sb.add_request_handler(TestIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())

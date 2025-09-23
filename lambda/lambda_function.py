@@ -1,282 +1,345 @@
-"""
-Alexa GenAI Assistant Lambda Function
-GPT-5 API integration with improved error handling
-"""
+# -*- coding: utf-8 -*-
+
+import os
+import re
+import json
+import logging
+import requests
+from pathlib import Path
 
 from ask_sdk_core.skill_builder import SkillBuilder
-from ask_sdk_core.dispatch_components import AbstractRequestHandler, AbstractExceptionHandler
-from ask_sdk_core.handler_input import HandlerInput
-from ask_sdk_model import Response
+from ask_sdk_core.dispatch_components import (
+    AbstractRequestHandler, AbstractExceptionHandler,
+    AbstractRequestInterceptor, AbstractResponseInterceptor
+)
 import ask_sdk_core.utils as ask_utils
-import requests
-import logging
-import json
 
-# Set your OpenAI API key
-api_key = ""  # ここにAPIキーを直接設定してください
-# 例: api_key = "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-
-# GPT-5 model
-model = "gpt-5-mini"
-
-logger = logging.getLogger(__name__)
+# -------------------------------------------------
+# ログ初期化（必ず最初に実行）
+# -------------------------------------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
+    force=True
+)
+logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+app_logger = logging.getLogger(__name__)
+app_logger.setLevel(logging.INFO)
+print("### MODULE LOADED")
 
-def generate_gpt_response(query, locale='ja'):
-    """Generate response from GPT-5 API"""
-    logger.info(f"=== generate_gpt_response START === query: {query}")
+# ===========================================
+# APIキー設定（3通りの併用）
+# ===========================================
+OPENAI_API_KEY_DIRECT = ""  # ← 直書きは開発のみ推奨（本番は環境変数）
+api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("openai_api_key")
 
-    # If no API key, return test response
-    if not api_key or api_key.strip() == "":
-        logger.info("No API key configured, returning test response")
-        if "生成" in query or "AI" in query.upper():
-            return "生成AIは、テキストや画像を自動的に作り出す人工知能技術です。（APIキー未設定のためテスト応答）"
+if OPENAI_API_KEY_DIRECT and OPENAI_API_KEY_DIRECT.strip():
+    api_key = OPENAI_API_KEY_DIRECT.strip()
+    logger.info("Using directly configured API key")
+
+if not api_key:
+    try:
+        env_path = Path(__file__).parent.parent / ".env"
+        if env_path.exists():
+            for line in env_path.read_text(encoding="utf-8").splitlines():
+                if line.strip() and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    if k in ["OPENAI_API_KEY", "openai_api_key"]:
+                        api_key = v.strip(" '\"\t")
+                        logger.info("API key loaded from .env file")
+                        break
+    except Exception as e:
+        logger.error(f".env load error: {e}")
+
+api_key = (api_key or "").strip()
+if api_key:
+    logger.info("API key configured (starts with %s...)", api_key[:10])
+else:
+    logger.warning("API key NOT configured - will return test/fallback responses")
+
+# ===========================================
+# ユーティリティ
+# ===========================================
+def safe_json(obj, maxlen=800):
+    try:
+        s = json.dumps(obj, ensure_ascii=False, default=str)
+        return s if len(s) <= maxlen else s[:maxlen] + f"...(truncated {len(s)-maxlen} chars)"
+    except Exception as e:
+        return f"<json-dump-error: {e}>"
+
+def strip_markdown(text: str) -> str:
+    if not text:
+        return ""
+    t = text
+    t = re.sub(r"`{1,3}([^`]*)`{1,3}", r"\1", t)
+    t = re.sub(r"\*\*([^*]+)\*\*", r"\1", t)
+    t = re.sub(r"\*([^*]+)\*", r"\1", t)
+    t = re.sub(r"__([^_]+)__", r"\1", t)
+    t = re.sub(r"_([^_]+)_", r"\1", t)
+    t = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", t)
+    t = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", t)
+    t = re.sub(r"\s+\n", "\n", t)
+    t = re.sub(r"\n{3,}", "\n\n", t)
+    return t.strip()
+
+def to_ssml_safe(text: str, max_chars: int = 400) -> str:
+    text = (text or "すみません、うまく答えを取得できませんでした。")[:max_chars]
+    text = text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return f"<speak>{text}</speak>"
+
+def get_slot_value(handler_input, slot_name: str) -> str:
+    """Slot 安全取得（存在しない・空でもエラーにしない）"""
+    intent = getattr(handler_input.request_envelope.request, "intent", None)
+    slots = getattr(intent, "slots", {}) or {}
+    slot = slots.get(slot_name)
+    return getattr(slot, "value", "") if slot else ""
+
+# ===========================================
+# OpenAI 呼び出し（Responses API）
+# ===========================================
+OPENAI_ENDPOINT = "https://api.openai.com/v1/responses"
+OPENAI_MODEL = "gpt-5-mini"   # 要件に合わせて調整可
+
+def generate_gpt_response(query, conversation_history=None, locale='ja'):
+    logger.info("=== generate_gpt_response START === query=%s", query)
+    logger.info("Conversation history len=%s", len(conversation_history) if conversation_history else 0)
+
+    # APIキー未設定ならフォールバック
+    if not api_key:
+        test_responses = {
+            "こんにちは": "こんにちは！テストモードです。APIキーを設定してください。",
+            "生成AI": "生成AIはデータから新しいコンテンツを作る技術です。（テスト）",
+            "天気": "天気は外部API連携後に対応予定です。（テスト）",
+        }
+        for k, v in test_responses.items():
+            if k in (query or ""):
+                return v
+        return f"「{query}」ですね。現在はテストモードのため、ダミー回答です。"
+
+    # 履歴を使ったプロンプト
+    if conversation_history:
+        ctx = "\n".join([f"ユーザー: {h['user']}\nアシスタント: {h['assistant']}" for h in conversation_history[-10:]])
+        if locale.startswith("ja"):
+            if query and len(query) < 15:
+                prompt = f"これまでの会話:\n{ctx}\n\n新しい質問: {query}\n短い質問は直前の文脈を踏まえて日本語で簡潔に答えてください。"
+            else:
+                prompt = f"これまでの会話:\n{ctx}\n\n新しい質問: {query}\n文脈を踏まえ、日本語で適切な長さで答えてください。"
         else:
-            return f"「{query}」についての質問を受け付けました。（APIキー未設定のためテスト応答）"
+            prompt = f"Previous conversation:\n{ctx}\n\nNew question: {query}\nAnswer concisely using context."
+    else:
+        prompt = f"質問: {query}\n日本語で、60文字以内で簡潔に答えてください。" if locale.startswith("ja") \
+                 else f"Question: {query}\nAnswer concisely in 60 words or less."
+
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+    body = {
+        "model": OPENAI_MODEL,
+        "input": prompt,
+        "reasoning": {"effort": "low"},
+        "text": {"verbosity": "low"}
+    }
 
     try:
-        # GPT-5 Responses API
-        url = "https://api.openai.com/v1/responses"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
+        logger.info("Calling OpenAI: model=%s", OPENAI_MODEL)
+        r = requests.post(OPENAI_ENDPOINT, headers=headers, json=body, timeout=6.0)  # 体感と成功率のバランス
+        r.raise_for_status()
+        j = r.json()
 
-        # Create prompt
-        if locale == 'ja':
-            prompt = f"質問: {query}\n回答を50文字以内で簡潔に日本語で答えてください。"
-        else:
-            prompt = f"Question: {query}\nAnswer briefly in 50 words or less."
+        out = j.get("output_text", "")
+        if not out and isinstance(j.get("output"), list) and len(j["output"]) > 1:
+            msg = j["output"][1]
+            if isinstance(msg, dict) and "content" in msg and msg["content"]:
+                c0 = msg["content"][0]
+                if isinstance(c0, dict):
+                    out = c0.get("text", "") or out
 
-        # GPT-5 request format
-        data = {
-            "model": model,
-            "input": prompt,
-            "reasoning": {
-                "effort": "low"  # Use low effort for quick responses
-            },
-            "text": {
-                "verbosity": "low"  # Concise responses
-            }
-        }
-
-        logger.info(f"Sending request to GPT-5...")
-        response = requests.post(url, headers=headers, json=data, timeout=10)
-
-        if response.ok:
-            result = response.json()
-
-            # GPT-5のレスポンス構造に対応
-            # output[1].content[0].text に実際のテキストがある
-            output_text = ""
-            try:
-                if 'output' in result and len(result['output']) > 1:
-                    message = result['output'][1]  # 2番目の要素がメッセージ
-                    if 'content' in message and len(message['content']) > 0:
-                        output_text = message['content'][0].get('text', '')
-
-                # 旧形式のフォールバック
-                if not output_text:
-                    output_text = result.get('output_text', '')
-
-                logger.info(f"GPT-5 response received: {output_text[:100] if output_text else 'No text'}...")
-                return output_text if output_text else "申し訳ありません。応答を生成できませんでした。"
-            except Exception as e:
-                logger.error(f"Error parsing GPT-5 response: {e}")
-                logger.error(f"Response structure: {json.dumps(result, ensure_ascii=False)[:500]}")
-                return "応答の解析中にエラーが発生しました。"
-        else:
-            logger.error(f"API Error {response.status_code}: {response.text}")
-            return f"APIエラーが発生しました。（エラーコード: {response.status_code}）"
+        out = strip_markdown(out)
+        if not out:
+            out = "すみません、うまく答えを取得できませんでした。"
+        logger.info("OpenAI OK: %s", out[:120])
+        return out
 
     except requests.exceptions.Timeout:
-        logger.error("Request timed out")
-        return "応答に時間がかかりすぎました。もう一度お試しください。"
+        logger.error("OpenAI timeout")
+        return "少し時間がかかっています。もう一度お試しください。"
     except Exception as e:
-        logger.error(f"Error in generate_gpt_response: {str(e)}", exc_info=True)
-        return "エラーが発生しました。もう一度お試しください。"
+        logger.error("OpenAI error: %s", e, exc_info=True)
+        return "応答の取得中にエラーが発生しました。時間をおいてお試しください。"
 
+# ===========================================
+# インターセプタ（毎回ログ）
+# ===========================================
+class LoggingRequestInterceptor(AbstractRequestInterceptor):
+    def process(self, handler_input):
+        try:
+            rtype = ask_utils.request_util.get_request_type(handler_input)
+        except Exception:
+            rtype = "Unknown"
+        logger.info(">>> [REQ] type=%s", rtype)
+        try:
+            env = handler_input.request_envelope
+            summary = {
+                "type": getattr(env.request, "object_type", None),
+                "locale": getattr(env.request, "locale", None),
+                "intent": getattr(getattr(env.request, "intent", None), "name", None),
+                "userId": getattr(getattr(env.context, "system", None), "user", None)
+                          and getattr(env.context.system.user, "user_id", None)
+            }
+            logger.info(">>> [REQ-SUM] %s", safe_json(summary))
+        except Exception as e:
+            logger.warning("REQ summary failed: %s", e)
+
+class LoggingResponseInterceptor(AbstractResponseInterceptor):
+    def process(self, handler_input, response):
+        try:
+            speak = getattr(getattr(response, "output_speech", None), "text", None) or \
+                    getattr(getattr(response, "output_speech", None), "ssml", None)
+            end = getattr(response, "should_end_session", None)
+            logger.info("<<< [RES] end=%s speak=%s", end, (speak[:80] + "..." if speak and len(speak) > 80 else speak))
+        except Exception as e:
+            logger.warning("RES summary failed: %s", e)
+
+# ===========================================
+# Handlers
+# ===========================================
 class LaunchRequestHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         return ask_utils.is_request_type("LaunchRequest")(handler_input)
 
     def handle(self, handler_input):
-        logger.info("=== LaunchRequestHandler START ===")
+        logger.info("=== LaunchRequest ===")
+        session = handler_input.attributes_manager.session_attributes
+        session["conversation_history"] = []
+        session["locale"] = getattr(handler_input.request_envelope.request, "locale", "ja-JP")
 
-        # Store locale
-        locale = handler_input.request_envelope.request.locale
-        session_attr = handler_input.attributes_manager.session_attributes
-        session_attr["locale"] = "ja" if locale and locale.startswith("ja") else "en"
+        speak = "じぇないアシスタントへようこそ。質問をどうぞ。" if api_key \
+                else "じぇないアシスタントへようこそ。OpenAI の APIキーが未設定です。環境変数 OPENAI_API_KEY を設定してください。"
+        return handler_input.response_builder.speak(to_ssml_safe(speak)).ask(to_ssml_safe("何についてお答えしますか？")).response
 
-        speak_output = "じぇないアシスタントへようこそ。何かお手伝いしましょうか？" if session_attr["locale"] == "ja" else "Welcome to Gen AI Assistant. How can I help you?"
-
-        return (
-            handler_input.response_builder
-                .speak(speak_output)
-                .ask(speak_output)
-                .response
-        )
-
-class UniversalQueryIntentHandler(AbstractRequestHandler):
-    """Handle all query intents with the same logic"""
+class GptQueryIntentHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
-        intent_name = ask_utils.get_intent_name(handler_input)
-        # Handle all custom intents that have a query slot
-        return intent_name in [
-            "GptQueryIntent",
-            "CreativeIntent",
-            "EntertainmentIntent",
-            "EmotionalIntent",
-            "AnalysisIntent",
-            "HelpIntent",
-            "PhilosophicalIntent",
-            "PracticalIntent"
-        ]
+        return ask_utils.is_intent_name("GptQueryIntent")(handler_input)
 
     def handle(self, handler_input):
-        intent_name = ask_utils.get_intent_name(handler_input)
-        logger.info(f"=== UniversalQueryIntentHandler START - Intent: {intent_name} ===")
+        logger.info("=== GptQueryIntent ===")
+        query = get_slot_value(handler_input, "query")
+        logger.info("Query=%s", query if query else "<empty>")
 
-        try:
-            # Get query
-            query = handler_input.request_envelope.request.intent.slots["query"].value
-            logger.info(f"Query: {query}")
+        session = handler_input.attributes_manager.session_attributes
+        history = session.get("conversation_history", [])
+        locale = session.get("locale", "ja-JP")
 
-            # Get locale
-            session_attr = handler_input.attributes_manager.session_attributes
-            locale = session_attr.get("locale", "ja")
-
-            # Add context based on intent type
-            context_prefix = ""
-            if intent_name == "CreativeIntent":
-                context_prefix = "創作的に答えて: " if locale == "ja" else "Be creative: "
-            elif intent_name == "EntertainmentIntent":
-                context_prefix = "楽しく答えて: " if locale == "ja" else "Be entertaining: "
-            elif intent_name == "EmotionalIntent":
-                context_prefix = "感情的に答えて: " if locale == "ja" else "Be emotional: "
-            elif intent_name == "AnalysisIntent":
-                context_prefix = "分析的に答えて: " if locale == "ja" else "Be analytical: "
-            elif intent_name == "PhilosophicalIntent":
-                context_prefix = "哲学的に答えて: " if locale == "ja" else "Be philosophical: "
-            elif intent_name == "PracticalIntent":
-                context_prefix = "実践的に答えて: " if locale == "ja" else "Be practical: "
-
-            # Generate response with context
-            full_query = context_prefix + query if context_prefix else query
-            speak_output = generate_gpt_response(full_query, locale)
-
-            logger.info(f"Response: {speak_output}")
-
-            ask_text = "他に質問はありますか？" if locale == "ja" else "Do you have any other questions?"
-
-            return (
-                handler_input.response_builder
-                    .speak(speak_output)
-                    .ask(ask_text)
-                    .response
-            )
-
-        except Exception as e:
-            logger.error(f"ERROR in UniversalQueryIntentHandler: {str(e)}", exc_info=True)
-            locale = handler_input.attributes_manager.session_attributes.get("locale", "ja")
-            speak_output = "エラーが発生しました。もう一度お試しください。" if locale == "ja" else "An error occurred. Please try again."
-            ask_text = "他に質問はありますか？" if locale == "ja" else "Do you have any other questions?"
-            return (
-                handler_input.response_builder
-                    .speak(speak_output)
-                    .ask(ask_text)
-                    .response
-            )
-
-class TestIntentHandler(AbstractRequestHandler):
-    def can_handle(self, handler_input):
-        return ask_utils.is_intent_name("TestIntent")(handler_input)
-
-    def handle(self, handler_input):
-        logger.info("=== TestIntentHandler START ===")
-
-        session_attr = handler_input.attributes_manager.session_attributes
-        locale = session_attr.get("locale", "ja")
-
-        if locale == "ja":
-            speak_output = "はい、正常に動作しています。GPT-5を使用して質問に答えます。"
+        if not query:
+            speak = "質問が聞き取れませんでした。もう一度お願いします。"
         else:
-            speak_output = "Yes, I'm working properly. I'm using GPT-5 to answer your questions."
+            speak = generate_gpt_response(query, history, locale)
+            history.append({"user": query, "assistant": speak})
+            if len(history) > 100:
+                history = history[-100:]
+            session["conversation_history"] = history
 
-        ask_text = "何か質問はありますか？" if locale == "ja" else "What would you like to ask?"
+        return handler_input.response_builder.speak(to_ssml_safe(speak)).ask(to_ssml_safe("他に質問はありますか？")).response
 
-        return (
-            handler_input.response_builder
-                .speak(speak_output)
-                .ask(ask_text)
-                .response
-        )
+class ContinuationIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return ask_utils.is_intent_name("ContinuationIntent")(handler_input)
+
+    def handle(self, handler_input):
+        logger.info("=== ContinuationIntent ===")
+        continuation = get_slot_value(handler_input, "continuation")
+        session = handler_input.attributes_manager.session_attributes
+        history = session.get("conversation_history", [])
+        locale = session.get("locale", "ja-JP")
+
+        if not continuation:
+            speak = "どの点を詳しく知りたいですか？"
+        else:
+            speak = generate_gpt_response(continuation, history, locale)
+            history.append({"user": continuation, "assistant": speak})
+            session["conversation_history"] = history[-100:]
+
+        return handler_input.response_builder.speak(to_ssml_safe(speak)).ask(to_ssml_safe("他に質問はありますか？")).response
+
+class ContextContinuationIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return ask_utils.is_intent_name("ContextContinuationIntent")(handler_input)
+
+    def handle(self, handler_input):
+        logger.info("=== ContextContinuationIntent ===")
+        aspect = get_slot_value(handler_input, "aspect")
+        session = handler_input.attributes_manager.session_attributes
+        history = session.get("conversation_history", [])
+        locale = session.get("locale", "ja-JP")
+
+        if not aspect:
+            speak = "どの点について詳しく知りたいですか？"
+        else:
+            speak = generate_gpt_response(aspect, history, locale)
+            history.append({"user": aspect, "assistant": speak})
+            session["conversation_history"] = history[-100:]
+
+        return handler_input.response_builder.speak(to_ssml_safe(speak)).ask(to_ssml_safe("他に知りたいことはありますか？")).response
+
+class TopicChangeIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return ask_utils.is_intent_name("TopicChangeIntent")(handler_input)
+
+    def handle(self, handler_input):
+        logger.info("=== TopicChangeIntent ===")
+        new_topic = get_slot_value(handler_input, "newTopic")
+        session = handler_input.attributes_manager.session_attributes
+        history = session.get("conversation_history", [])
+        locale = session.get("locale", "ja-JP")
+
+        if not new_topic:
+            speak = "何について話しましょうか？"
+        else:
+            speak = generate_gpt_response(new_topic, history, locale)
+            history.append({"user": new_topic, "assistant": speak})
+            session["conversation_history"] = history[-100:]
+
+        return handler_input.response_builder.speak(to_ssml_safe(speak)).ask(to_ssml_safe("この話題について他に質問はありますか？")).response
+
+# ★ 追加: DetailRequestIntent（以前エラーが出たインテント）
+class DetailRequestIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return ask_utils.is_intent_name("DetailRequestIntent")(handler_input)
+
+    def handle(self, handler_input):
+        logger.info("=== DetailRequestIntent ===")
+        query = get_slot_value(handler_input, "query") or "詳細を教えて"
+        session = handler_input.attributes_manager.session_attributes
+        history = session.get("conversation_history", [])
+        locale = session.get("locale", "ja-JP")
+
+        speak = generate_gpt_response(query, history, locale)
+        history.append({"user": query, "assistant": speak})
+        session["conversation_history"] = history[-100:]
+        return handler_input.response_builder.speak(to_ssml_safe(speak)).ask(to_ssml_safe("他に質問はありますか？")).response
 
 class HelpIntentHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         return ask_utils.is_intent_name("AMAZON.HelpIntent")(handler_input)
 
     def handle(self, handler_input):
-        session_attr = handler_input.attributes_manager.session_attributes
-        locale = session_attr.get("locale", "ja")
-
-        if locale == "ja":
-            speak_output = "何でも質問してください。例えば、「生成AIとは何か」と聞いてみてください。"
-        else:
-            speak_output = "You can ask me anything. For example, try asking 'What is generative AI?'"
-
-        return (
-            handler_input.response_builder
-                .speak(speak_output)
-                .ask(speak_output)
-                .response
-        )
-
-class FallbackIntentHandler(AbstractRequestHandler):
-    def can_handle(self, handler_input):
-        return ask_utils.is_intent_name("AMAZON.FallbackIntent")(handler_input)
-
-    def handle(self, handler_input):
-        logger.info("=== FallbackIntentHandler TRIGGERED ===")
-
-        session_attr = handler_input.attributes_manager.session_attributes
-        locale = session_attr.get("locale", "ja")
-
-        if locale == "ja":
-            speak_output = "すみません、よく分かりませんでした。もう一度お願いします。"
-        else:
-            speak_output = "Sorry, I didn't understand that. Could you please repeat?"
-
-        return (
-            handler_input.response_builder
-                .speak(speak_output)
-                .ask(speak_output)
-                .response
-        )
+        speak = "じぇないアシスタントは、質問に簡潔にお答えします。例えば『東京の気温は？』などと聞いてください。"
+        return handler_input.response_builder.speak(to_ssml_safe(speak)).ask(to_ssml_safe("何を知りたいですか？")).response
 
 class CancelOrStopIntentHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
-        return (ask_utils.is_intent_name("AMAZON.CancelIntent")(handler_input) or
-                ask_utils.is_intent_name("AMAZON.StopIntent")(handler_input))
+        return ask_utils.is_intent_name("AMAZON.CancelIntent")(handler_input) or \
+               ask_utils.is_intent_name("AMAZON.StopIntent")(handler_input)
 
     def handle(self, handler_input):
-        session_attr = handler_input.attributes_manager.session_attributes
-        locale = session_attr.get("locale", "ja")
-
-        speak_output = "さようなら" if locale == "ja" else "Goodbye!"
-
-        return (
-            handler_input.response_builder
-                .speak(speak_output)
-                .response
-        )
+        speak = "さようなら。"
+        return handler_input.response_builder.speak(to_ssml_safe(speak)).response
 
 class SessionEndedRequestHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         return ask_utils.is_request_type("SessionEndedRequest")(handler_input)
 
     def handle(self, handler_input):
-        logger.info(f"Session ended: {handler_input.request_envelope.request.reason}")
+        logger.info("Session ended: %s", getattr(handler_input.request_envelope.request, "reason", None))
         return handler_input.response_builder.response
 
 class CatchAllExceptionHandler(AbstractExceptionHandler):
@@ -284,40 +347,27 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
         return True
 
     def handle(self, handler_input, exception):
-        logger.error(f"=== EXCEPTION CAUGHT ===")
-        logger.error(f"Exception: {str(exception)}", exc_info=True)
+        logger.error("=== EXCEPTION CAUGHT ===", exc_info=True)
+        speak = f"予期しないエラーです。{str(exception)[:30]}"
+        return handler_input.response_builder.speak(to_ssml_safe(speak)).ask(to_ssml_safe("もう一度お試しください。")).response
 
-        session_attr = handler_input.attributes_manager.session_attributes
-        locale = session_attr.get("locale", "ja")
-
-        if locale == "ja":
-            speak_output = "予期しないエラーが発生しました。もう一度お試しください。"
-            ask_output = "他に何かお手伝いしましょうか？"
-        else:
-            speak_output = "An unexpected error occurred. Please try again."
-            ask_output = "How else can I help you?"
-
-        return (
-            handler_input.response_builder
-                .speak(speak_output)
-                .ask(ask_output)
-                .response
-        )
-
-# Build skill
+# ===========================================
+# Skill 構築
+# ===========================================
 sb = SkillBuilder()
-
-# Add request handlers
+# 具体的 → 汎用 の順で登録
 sb.add_request_handler(LaunchRequestHandler())
-sb.add_request_handler(UniversalQueryIntentHandler())
-sb.add_request_handler(TestIntentHandler())
+sb.add_request_handler(GptQueryIntentHandler())
+sb.add_request_handler(ContinuationIntentHandler())
+sb.add_request_handler(ContextContinuationIntentHandler())
+sb.add_request_handler(TopicChangeIntentHandler())
+sb.add_request_handler(DetailRequestIntentHandler())  # ★ 追加
 sb.add_request_handler(HelpIntentHandler())
-sb.add_request_handler(FallbackIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
 
-# Add exception handler
 sb.add_exception_handler(CatchAllExceptionHandler())
+sb.add_global_request_interceptor(LoggingRequestInterceptor())
+sb.add_global_response_interceptor(LoggingResponseInterceptor())
 
-# Lambda handler
 lambda_handler = sb.lambda_handler()

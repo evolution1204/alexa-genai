@@ -705,6 +705,82 @@
                     ]
                 },
                 {
+                    "name": "NotionSearchIntent",
+                    "slots": [
+                        {
+                            "name": "query",
+                            "type": "AMAZON.SearchQuery"
+                        }
+                    ],
+                    "samples": [
+                        "Notionで {query} を検索して",
+                        "Notionで {query} を教えて",
+                        "Notionで {query} を調べて",
+                        "Notionで {query} を探して",
+                        "Notionで {query} を見つけて",
+                        "Notionの {query} を検索して",
+                        "Notionの {query} を教えて",
+                        "Notionの {query} を調べて",
+                        "Notionの {query} を探して",
+                        "Notionの {query} を見つけて",
+                        "Notionに {query} がある",
+                        "Notionに {query} があるかを検索して",
+                        "Notionに {query} があるかを知りたい",
+                        "Notionに {query} があるかを教えて",
+                        "Notionに {query} があるかを見つけて",
+                        "Notionに {query} があるかを調べて",
+                        "Notionに {query} があるかを探して",
+                        "Notionに {query} ってある",
+                        "Notionにある {query}",
+                        "{query} を Notion で調べて",
+                        "{query} を Notion で教えて",
+                        "{query} を Notion で探して",
+                        "{query} を Notion で検索して",
+                        "{query} について Notion で教えて",
+                        "{query} について Notion で知りたい",
+                        "{query} について Notion で見つけて",
+                        "{query} について Notion で調べて",
+                        "{query} について Notion で探して",
+                        "{query} について Notion で検索して"
+                    ]
+                },
+                {
+                    "name": "NotionReadIntent",
+                    "slots": [
+                        {
+                            "name": "index",
+                            "type": "AMAZON.NUMBER"
+                        },
+                        {
+                            "name": "title",
+                            "type": "AMAZON.SearchQuery"
+                        },
+                        {
+                            "name": "position",
+                            "type": "NOTION_POSITION"
+                        }
+                    ],
+                    "samples": [    
+                        "{index} つ目の本文を読んで",
+                        "{index} つ目の本文を読んで",
+                        "{index} つ目の本文を教えて",
+                        "{index} つ目の本文を教えて",
+                        "{index} 件目の本文を読んで",
+                        "{index} 番目の本文を読んで",
+                        "{index} 件目の本文を教えて",
+                        "{index} 番目の本文を教えて",
+                        "{title} の本文を読んで",
+                        "{title} の内容を読んで",
+                        "{title} の本文を教えて",
+                        "{title} の内容を教えて",
+                        "{title} を開いて",
+                        "{position} の本文を読んで",
+                        "{position} の内容を読んで",
+                        "{position} の本文を教えて",
+                        "{position} の内容を教えて"                        
+                    ]
+                },                
+                {
                     "name": "TestIntent",
                     "slots": [],
                     "samples": [
@@ -741,7 +817,16 @@
                     "samples": []
                 }
             ],
-            "types": []
+            "types": [
+                {
+                    "name": "NOTION_POSITION",
+                    "values": [
+                        { "name": { "value": "最初",   "synonyms": [ "いちばん最初", "先頭", "はじめ" ] } },
+                        { "name": { "value": "真ん中", "synonyms": [ "中間", "あいだ" ] } },
+                        { "name": { "value": "最後",   "synonyms": [ "いちばん最後", "末尾", "ラスト" ] } }
+                    ]
+                }
+            ]            
         }
     }
 }

@@ -815,6 +815,66 @@
           "samples": []
         },
         {
+          "slots": [
+            {
+              "name": "title",
+              "type": "AMAZON.SearchQuery"
+            },
+            {
+              "name": "content",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "NotionCreatePageIntent",
+          "samples": [
+            "Notionに {title} というタイトルで {content} を書いて",
+            "Notionに {title} というページを作って",
+            "Notionに {title} を追加して",
+            "Notionに {title} を記録して",
+            "Notionに {title} を保存して",
+            "Notionで {title} というページを作成して",
+            "Notionで {title} を新規作成して",
+            "Notionに {title} というタイトルでページを作って",
+            "Notion に {content} を書いて",
+            "Notion に {content} を記録して",
+            "Notion に {content} を保存して",
+            "Notion に {content} を追加して",
+            "Notion に {content} をメモして",
+            "{title} を Notion に書いて",
+            "{title} を Notion に記録して",
+            "{title} を Notion に保存して",
+            "{content} を Notion に書いて",
+            "{content} を Notion に記録して"
+          ]
+        },
+        {
+          "slots": [
+            {
+              "name": "title",
+              "type": "AMAZON.SearchQuery"
+            },
+            {
+              "name": "content",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "NotionAddToDatabaseIntent",
+          "samples": [
+            "Notion のデータベースに {title} を追加して",
+            "Notion のデータベースに {title} を書いて",
+            "Notion のデータベースに {title} を記録して",
+            "Notion のデータベースに {content} を追加して",
+            "Notion のデータベースに {content} を書いて",
+            "Notion のデータベースに {content} を記録して",
+            "データベースに {title} を追加",
+            "データベースに {title} を書いて",
+            "データベースに {content} を追加",
+            "{title} をデータベースに追加して",
+            "{title} をデータベースに記録して",
+            "{content} をデータベースに追加して"
+          ]
+        },
+        {
           "name": "AMAZON.NavigateHomeIntent",
           "samples": []
         }

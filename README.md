@@ -5,7 +5,7 @@ Amazon AlexaスキルとOpenAI GPT-5-chat-latest、Notion API、S3ベースRAG�
 ## 🚀 主要機能
 
 - **OpenAI GPT-5統合**: 最新のGPT-5-chat-latestモデルによる自然な対話
-- **Notion検索・読み込み**: ナレッジベースからの情報取得
+- **Notion検索・読み書き**: ナレッジベースからの情報取得と音声による記録
 - **RAG（Retrieval-Augmented Generation）**: コンテキストを強化した回答生成
 - **S3データ永続化**: ユーザー別の会話履歴とRAGデータの保存
 - **多言語対応**: 日本語・英語の完全サポート
@@ -68,6 +68,8 @@ OPENAI_MODEL=gpt-5-chat-latest
 # Notion API設定
 NOTION_TOKEN=ntn_xxxxx
 NOTION_VERSION=2022-06-28
+NOTION_DEFAULT_PARENT_ID=xxxxxxxxxxxxx  # 書き込み先の親ページID
+NOTION_DEFAULT_DATABASE_ID=xxxxxxxxxxxxx  # 書き込み先のデータベースID
 
 # S3設定（Alexa Hosted標準）
 S3_BUCKET=alexa-hosted-bucket-id
@@ -110,6 +112,8 @@ NOTION_SNIPPET_CHARS=300  # 抽出文字数
 - ページ検索API呼び出し
 - ページ内容抽出（最初の300文字）
 - タイトル・URL取得
+- ページ作成・書き込み（音声入力対応）
+- データベースエントリ追加
 
 #### 4. **rag_store_s3.py** - RAGストレージ
 - ユーザー別データ永続化
@@ -131,20 +135,27 @@ graph TD
     C -->|一般質問| D[GenericQueryIntents]
     C -->|Notion検索| E[NotionSearchIntent]
     C -->|Notion読込| F[NotionReadIntent]
+    C -->|Notion書込| G[NotionCreatePageIntent]
+    C -->|DB追加| H[NotionAddToDatabaseIntent]
 
-    D --> G[S3からRAG取得]
-    G --> H[OpenAI GPT-5]
+    D --> I[S3からRAG取得]
+    I --> J[OpenAI GPT-5]
 
-    E --> I[Notion API検索]
-    I --> J[S3にキャッシュ]
-    J --> K[RAG追加]
+    E --> K[Notion API検索]
+    K --> L[S3にキャッシュ]
+    L --> M[RAG追加]
 
-    F --> L[キャッシュ確認]
-    L --> M[Notion本文取得]
-    M --> N[RAG追加]
+    F --> N[キャッシュ確認]
+    N --> O[Notion本文取得]
+    O --> P[RAG追加]
 
-    H --> O[SSML生成]
-    O --> P[Alexa応答]
+    G --> Q[Notionページ作成]
+    H --> R[Notionデータベース追加]
+
+    J --> S[SSML生成]
+    Q --> S
+    R --> S
+    S --> T[Alexa応答]
 ```
 
 ### SSML安全化処理
@@ -170,7 +181,7 @@ graph TD
 - **NavigationIntent** - ナビゲーション
 - **SelectionIntent** - 選択
 
-### Notion統合インテント（新機能）
+### Notion統合インテント
 - **NotionSearchIntent**: Notionページの検索
   ```
   「Notionで React を検索して」
@@ -182,6 +193,18 @@ graph TD
   「最初の本文を読んで」
   「真ん中のやつを読んで」
   → ページの最初300文字を要約して返答、RAGストアに追加
+  ```
+- **NotionCreatePageIntent**: Notionページの作成（新機能）
+  ```
+  「Notionに今日の予定というタイトルで会議が3件ありますを書いて」
+  「Notionに買い物リストを追加して」
+  → 指定した親ページの下に新しいページを作成
+  ```
+- **NotionAddToDatabaseIntent**: データベースエントリの追加（新機能）
+  ```
+  「Notionのデータベースにタスク1を追加して」
+  「データベースに新しいアイデアを記録して」
+  → 指定したデータベースに新しいエントリを追加
   ```
 
 ### 特殊インテント
@@ -543,6 +566,11 @@ Lambda関数のロググループを確認:
 ## 🔄 更新履歴
 
 ### 2025-09-30（現在のバージョン）
+- **Notion書き込み機能追加**
+  - `NotionCreatePageIntent`: 音声入力でNotionページを作成
+  - `NotionAddToDatabaseIntent`: データベースへのエントリ追加
+  - 環境変数による親ページID・データベースID管理
+  - 2000文字制限対応の自動分割処理
 - **ASK CLI統合**
   - ローカル開発環境とAlexa Developer Consoleの連携
   - `ask deploy`によるワンコマンドデプロイ

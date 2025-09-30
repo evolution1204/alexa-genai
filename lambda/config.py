@@ -34,11 +34,13 @@ def _load_dotenv_if_present():
 _load_dotenv_if_present()
 
 # ====== 主要キー ======
-OPENAI_API_KEY  = os.environ.get("_OPENAI_API_KEY", "").strip()
+OPENAI_API_KEY  = os.environ.get("OPENAI_API_KEY", "").strip()
 OPENAI_MODEL    = os.environ.get("OPENAI_MODEL", "gpt-5-chat-latest").strip()
 
 NOTION_TOKEN    = os.environ.get("NOTION_TOKEN", "").strip()
 NOTION_VERSION  = os.environ.get("NOTION_VERSION", "2022-06-28").strip()
+NOTION_DEFAULT_PARENT_ID = os.environ.get("NOTION_DEFAULT_PARENT_ID", "").strip()
+NOTION_DEFAULT_DATABASE_ID = os.environ.get("NOTION_DEFAULT_DATABASE_ID", "").strip()
 
 S3_BUCKET       = os.environ.get("S3_BUCKET", "").strip()
 S3_PREFIX       = os.environ.get("S3_PREFIX", "Media").strip()
@@ -53,7 +55,7 @@ NOTION_SNIPPET_CHARS   = int(os.environ.get("NOTION_SNIPPET_CHARS", "300"))
 
 def warn_if_missing():
     if not OPENAI_API_KEY:
-        LOGGER.warning("[config] _OPENAI_API_KEY is missing")
+        LOGGER.warning("[config] OPENAI_API_KEY is missing")
     if not NOTION_TOKEN:
         LOGGER.warning("[config] NOTION_TOKEN is missing")
     if not S3_BUCKET:

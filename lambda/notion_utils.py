@@ -4,7 +4,8 @@ import requests
 
 from config import (
     NOTION_TOKEN, NOTION_VERSION, HTTP_TIMEOUT_SEC,
-    NOTION_SEARCH_LIMIT, NOTION_BLOCKS_PAGE_SZ, NOTION_SNIPPET_CHARS
+    NOTION_SEARCH_LIMIT, NOTION_BLOCKS_PAGE_SZ, NOTION_SNIPPET_CHARS,
+    NOTION_DEFAULT_PARENT_ID, NOTION_DEFAULT_DATABASE_ID
 )
 
 def _notion_headers():
@@ -92,3 +93,181 @@ def notion_page_first_text(page_id: str, *, max_chars: int = None, timeout: floa
         return " ／ ".join(lines)[:max_chars]
     except Exception:
         return ""
+
+def notion_create_page(title: str, content: str, *, parent_id: str = None, timeout: float = None):
+    """
+    Notionに新しいページを作成
+
+    Args:
+        title: ページタイトル
+        content: ページ本文
+        parent_id: 親ページID（省略時は環境変数のデフォルト親ページを使用）
+        timeout: タイムアウト秒数
+
+    Returns:
+        dict: {"success": bool, "page_id": str, "url": str, "error": str}
+    """
+    if timeout is None:
+        timeout = HTTP_TIMEOUT_SEC
+
+    if parent_id is None:
+        parent_id = NOTION_DEFAULT_PARENT_ID
+
+    if not parent_id:
+        return {"success": False, "error": "親ページIDが指定されていません"}
+
+    url = "https://api.notion.com/v1/pages"
+
+    # ページプロパティ（タイトル）
+    properties = {
+        "title": {
+            "title": [{"text": {"content": title}}]
+        }
+    }
+
+    # 本文ブロック（段落として追加）
+    children = []
+    if content:
+        # 長い文章は2000文字ごとに分割（Notion APIの制限）
+        max_len = 2000
+        content_parts = [content[i:i+max_len] for i in range(0, len(content), max_len)]
+        for part in content_parts:
+            children.append({
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [{"text": {"content": part}}]
+                }
+            })
+
+    payload = {
+        "parent": {"page_id": parent_id},
+        "properties": properties,
+        "children": children
+    }
+
+    try:
+        resp = requests.post(url, headers=_notion_headers(), data=json.dumps(payload), timeout=timeout)
+        if resp.status_code != 200:
+            error_msg = resp.json().get("message", "不明なエラー")
+            return {"success": False, "error": f"API エラー: {error_msg}"}
+
+        result = resp.json()
+        return {
+            "success": True,
+            "page_id": result.get("id"),
+            "url": result.get("url"),
+            "error": None
+        }
+    except Exception as e:
+        return {"success": False, "error": f"例外: {type(e).__name__}"}
+
+def notion_append_blocks(page_id: str, content: str, *, timeout: float = None):
+    """
+    既存ページに本文を追加
+
+    Args:
+        page_id: 追加先ページID
+        content: 追加する本文
+        timeout: タイムアウト秒数
+
+    Returns:
+        dict: {"success": bool, "error": str}
+    """
+    if timeout is None:
+        timeout = HTTP_TIMEOUT_SEC
+
+    url = f"https://api.notion.com/v1/blocks/{page_id}/children"
+
+    # 本文ブロック
+    children = []
+    if content:
+        max_len = 2000
+        content_parts = [content[i:i+max_len] for i in range(0, len(content), max_len)]
+        for part in content_parts:
+            children.append({
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [{"text": {"content": part}}]
+                }
+            })
+
+    payload = {"children": children}
+
+    try:
+        resp = requests.patch(url, headers=_notion_headers(), data=json.dumps(payload), timeout=timeout)
+        if resp.status_code != 200:
+            error_msg = resp.json().get("message", "不明なエラー")
+            return {"success": False, "error": f"API エラー: {error_msg}"}
+
+        return {"success": True, "error": None}
+    except Exception as e:
+        return {"success": False, "error": f"例外: {type(e).__name__}"}
+
+def notion_add_to_database(title: str, content: str, *, database_id: str = None, timeout: float = None):
+    """
+    データベースに新しいエントリを追加
+
+    Args:
+        title: エントリタイトル（Nameプロパティ）
+        content: エントリ本文
+        database_id: データベースID（省略時は環境変数のデフォルトDBを使用）
+        timeout: タイムアウト秒数
+
+    Returns:
+        dict: {"success": bool, "page_id": str, "url": str, "error": str}
+    """
+    if timeout is None:
+        timeout = HTTP_TIMEOUT_SEC
+
+    if database_id is None:
+        database_id = NOTION_DEFAULT_DATABASE_ID
+
+    if not database_id:
+        return {"success": False, "error": "データベースIDが指定されていません"}
+
+    url = "https://api.notion.com/v1/pages"
+
+    # データベースエントリのプロパティ（Nameプロパティを想定）
+    properties = {
+        "Name": {
+            "title": [{"text": {"content": title}}]
+        }
+    }
+
+    # 本文ブロック
+    children = []
+    if content:
+        max_len = 2000
+        content_parts = [content[i:i+max_len] for i in range(0, len(content), max_len)]
+        for part in content_parts:
+            children.append({
+                "object": "block",
+                "type": "paragraph",
+                "paragraph": {
+                    "rich_text": [{"text": {"content": part}}]
+                }
+            })
+
+    payload = {
+        "parent": {"database_id": database_id},
+        "properties": properties,
+        "children": children
+    }
+
+    try:
+        resp = requests.post(url, headers=_notion_headers(), data=json.dumps(payload), timeout=timeout)
+        if resp.status_code != 200:
+            error_msg = resp.json().get("message", "不明なエラー")
+            return {"success": False, "error": f"API エラー: {error_msg}"}
+
+        result = resp.json()
+        return {
+            "success": True,
+            "page_id": result.get("id"),
+            "url": result.get("url"),
+            "error": None
+        }
+    except Exception as e:
+        return {"success": False, "error": f"例外: {type(e).__name__}"}

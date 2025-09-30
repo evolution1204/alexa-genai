@@ -13,7 +13,10 @@ from convo_core import (
     _get_session, _append_history, _last_user_utterance,
     one_shot_answer
 )
-from notion_utils import notion_search_pages, notion_page_first_text
+from notion_utils import (
+    notion_search_pages, notion_page_first_text,
+    notion_create_page, notion_add_to_database
+)
 from rag_store_s3 import (
     s3_store_load_user, s3_store_save_user,
     rag_add_items, rag_top_snippets,
@@ -271,6 +274,74 @@ class StopCancelHandler(AbstractRequestHandler):
     def handle(self, handler_input) -> Response:
         return handler_input.response_builder.speak(to_safe_ssml("またね！")).response
 
+class NotionCreatePageIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_intent_name("NotionCreatePageIntent")(handler_input)
+    def handle(self, handler_input) -> Response:
+        intent = handler_input.request_envelope.request.intent
+        slots: Dict[str, Any] = getattr(intent, "slots", {}) or {}
+
+        title = (slots.get("title").value if "title" in slots and slots["title"] else "") or ""
+        content = (slots.get("content").value if "content" in slots and slots["content"] else "") or ""
+
+        # タイトルとコンテンツの処理
+        if not title and not content:
+            speech = "タイトルか内容を教えてね。"
+        elif not title:
+            # タイトルがない場合、コンテンツから最初の部分をタイトルにする
+            title = content[:30] if len(content) > 30 else content
+            content = content
+        elif not content:
+            # コンテンツがない場合、タイトルのみのページを作成
+            content = ""
+
+        # Notionページ作成
+        result = notion_create_page(title=title, content=content)
+
+        if result["success"]:
+            speech = f"Notionに「{title}」を保存したよ！"
+        else:
+            speech = f"Notionへの保存に失敗したよ。エラー: {result['error']}"
+
+        return (handler_input.response_builder
+                .speak(to_safe_ssml(speech))
+                .ask(to_safe_ssml("他に何かある？"))
+                .response)
+
+class NotionAddToDatabaseIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_intent_name("NotionAddToDatabaseIntent")(handler_input)
+    def handle(self, handler_input) -> Response:
+        intent = handler_input.request_envelope.request.intent
+        slots: Dict[str, Any] = getattr(intent, "slots", {}) or {}
+
+        title = (slots.get("title").value if "title" in slots and slots["title"] else "") or ""
+        content = (slots.get("content").value if "content" in slots and slots["content"] else "") or ""
+
+        # タイトルとコンテンツの処理
+        if not title and not content:
+            speech = "タイトルか内容を教えてね。"
+        elif not title:
+            # タイトルがない場合、コンテンツから最初の部分をタイトルにする
+            title = content[:30] if len(content) > 30 else content
+            content = content
+        elif not content:
+            # コンテンツがない場合、タイトルのみのエントリを作成
+            content = ""
+
+        # Notionデータベースにエントリ追加
+        result = notion_add_to_database(title=title, content=content)
+
+        if result["success"]:
+            speech = f"データベースに「{title}」を追加したよ！"
+        else:
+            speech = f"データベースへの追加に失敗したよ。エラー: {result['error']}"
+
+        return (handler_input.response_builder
+                .speak(to_safe_ssml(speech))
+                .ask(to_safe_ssml("他に何かある？"))
+                .response)
+
 class NavigateHomeHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
         return is_intent_name("AMAZON.NavigateHomeIntent")(handler_input)
@@ -325,6 +396,8 @@ sb = SkillBuilder()
 sb.add_request_handler(LaunchRequestHandler())
 sb.add_request_handler(NotionSearchIntentHandler())
 sb.add_request_handler(NotionReadIntentHandler())
+sb.add_request_handler(NotionCreatePageIntentHandler())
+sb.add_request_handler(NotionAddToDatabaseIntentHandler())
 sb.add_request_handler(RefineIntentHandler())
 sb.add_request_handler(GenericQueryIntentsHandler())
 sb.add_request_handler(ContinuationIntentHandler())

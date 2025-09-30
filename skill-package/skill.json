@@ -1,38 +1,86 @@
 {
-    "manifest": {
-        "publishingInformation": {
-            "locales": {
-                "en-US": {
-                    "name": "GenAI Assistant",
-                    "summary": "AI-powered assistant using GPT-5",
-                    "description": "An intelligent Alexa skill that uses OpenAI's GPT-5 model to answer questions, provide creative content, and help with various tasks. Ask about any topic and get helpful responses.",
-                    "examplePhrases": [
-                        "Alexa, open gen ai",
-                        "Alexa, ask gen ai what is artificial intelligence",
-                        "Alexa, ask gen ai to tell me a story about dragons"
-                    ],
-                    "keywords": ["AI", "assistant", "GPT", "chat", "questions", "help", "information", "creative"]
-                },
-                "ja-JP": {
-                    "name": "GenAIアシスタント",
-                    "summary": "GPT-5を使用したAIアシスタント",
-                    "description": "OpenAIのGPT-5モデルを使用して、質問への回答、創作活動、様々なタスクのサポートを行うインテリジェントなAlexaスキルです。どんなトピックでも質問してください。",
-                    "examplePhrases": [
-                        "アレクサ、じぇないを開いてください",
-                        "アレクサ、じぇないで人工知能について教えて",
-                        "アレクサ、じぇないでドラゴンの物語を作って"
-                    ],
-                    "keywords": ["AI", "アシスタント", "GPT", "チャット", "質問", "ヘルプ", "情報", "創作"]
-                }
-            },
-            "isAvailableWorldwide": true,
-            "testingInstructions": "To test this skill:\n1. Say 'Alexa, open jenai' to start the skill\n2. Ask any question like 'What is the weather on Mars?'\n3. Request creative content like 'Tell me a story about space'\n4. Try emotional requests like 'Make me laugh'\n5. Say 'stop' or 'cancel' to exit the skill\n\nThe skill supports multiple languages and will automatically detect Japanese or English based on your input.",
-            "category": "EDUCATION_AND_REFERENCE",
-            "distributionCountries": []
+  "manifest": {
+    "publishingInformation": {
+      "locales": {
+        "en-US": {
+          "summary": "GenAI for Alexa",
+          "examplePhrases": [
+            "Alexa, open pico pico",
+            "Alexa, launch pico pico",
+            "Alexa, speak pico pico"
+          ],
+          "keywords": [],
+          "name": "GenAI for Alexa",
+          "description": "GenAI for Alexa",
+          "smallIconUri": "file://assets/images/en-US_smallIconUri.png",
+          "largeIconUri": "file://assets/images/en-US_largeIconUri.png"
         },
-        "apis": {
-            "custom": {}
+        "ja-JP": {
+          "summary": "生成AIが利用できるスキル",
+          "examplePhrases": [
+            "アレクサ、ぴこを開いて",
+            "アレクサ、ぴこを起こして",
+            "アレクサ、ぴこ"
+          ],
+          "keywords": [],
+          "name": "GenAI for Alexa",
+          "description": "生成AIが利用できるスキル",
+          "smallIconUri": "file://assets/images/ja-JP_smallIconUri.png",
+          "largeIconUri": "file://assets/images/ja-JP_largeIconUri.png"
+        }
+      },
+      "automaticDistribution": {
+        "isActive": false
+      },
+      "isAvailableWorldwide": false,
+      "testingInstructions": "{\"ask_dist_username\":\"\",\"ask_dist_password\":\"\",\"ask_dist_testing_instructions\":\"Sample Testing Instructions.\"}",
+      "category": "COMMUNICATION",
+      "distributionMode": "PUBLIC",
+      "distributionCountries": [
+        "JP"
+      ]
+    },
+    "apis": {
+      "custom": {
+        "endpoint": {
+          "uri": "arn:aws:lambda:eu-west-1:634183828881:function:13ee72f8-8ffc-49c9-9134-3c291e909fa7:Release_0"
         },
-        "manifestVersion": "1.0"
+        "interfaces": [],
+        "locales": {},
+        "regions": {
+          "EU": {
+            "endpoint": {
+              "uri": "arn:aws:lambda:eu-west-1:634183828881:function:13ee72f8-8ffc-49c9-9134-3c291e909fa7:Release_0"
+            }
+          },
+          "NA": {
+            "endpoint": {
+              "uri": "arn:aws:lambda:us-east-1:634183828881:function:13ee72f8-8ffc-49c9-9134-3c291e909fa7:Release_0"
+            }
+          },
+          "FE": {
+            "endpoint": {
+              "uri": "arn:aws:lambda:us-west-2:634183828881:function:13ee72f8-8ffc-49c9-9134-3c291e909fa7:Release_0"
+            }
+          }
+        }
+      }
+    },
+    "manifestVersion": "1.0",
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "locales": {
+        "en-US": {},
+        "ja-JP": {}
+      },
+      "containsAds": false,
+      "isExportCompliant": true,
+      "isChildDirected": false,
+      "shoppingKit": {
+        "isShoppingActionsEnabled": false,
+        "isAmazonAssociatesOnAlexaEnabled": false
+      },
+      "usesPersonalInfo": false
     }
+  }
 }

@@ -40,7 +40,11 @@ Thumbs.db
 .ask/
 ask-resources.json.bak
 
+# Backup
+.backup_*/
+
 # Sensitive
 *.pem
 *.key
 .env
+openai.key

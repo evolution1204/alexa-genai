@@ -1,397 +1,397 @@
 {
-    "interactionModel": {
-        "languageModel": {
-            "invocationName": "gen ai",
-            "intents": [
-                {
-                    "name": "GptQueryIntent",
-                    "slots": [
-                        {
-                            "name": "query",
-                            "type": "AMAZON.SearchQuery"
-                        }
-                    ],
-                    "samples": [
-                        "tell me about {query}",
-                        "what is {query}",
-                        "explain {query}",
-                        "describe {query}",
-                        "tell me {query}",
-                        "what about {query}",
-                        "how about {query}",
-                        "I want to know about {query}",
-                        "I want to know {query}",
-                        "search for {query}",
-                        "search {query}",
-                        "look up {query}",
-                        "find {query}",
-                        "research {query}",
-                        "investigate {query}",
-                        "what does {query} mean",
-                        "what is the meaning of {query}",
-                        "define {query}",
-                        "what do you know about {query}",
-                        "information about {query}",
-                        "details about {query}",
-                        "give me details on {query}",
-                        "elaborate on {query}",
-                        "clarify {query}",
-                        "summarize {query}",
-                        "give me a summary of {query}",
-                        "brief me on {query}",
-                        "give me an overview of {query}",
-                        "teach me about {query}",
-                        "educate me on {query}",
-                        "help me understand {query}",
-                        "explain {query} to me",
-                        "break down {query}",
-                        "simplify {query}",
-                        "make {query} simple",
-                        "give me examples of {query}",
-                        "show me examples of {query}",
-                        "what are examples of {query}",
-                        "illustrate {query}",
-                        "demonstrate {query}",
-                        "what's the deal with {query}",
-                        "tell me more about {query}",
-                        "expand on {query}",
-                        "dive deeper into {query}",
-                        "explore {query}",
-                        "examine {query}",
-                        "discuss {query}",
-                        "talk about {query}",
-                        "speak about {query}",
-                        "what can you tell me about {query}"
-                    ]
-                },
-                {
-                    "name": "CreativeIntent",
-                    "slots": [
-                        {
-                            "name": "query",
-                            "type": "AMAZON.SearchQuery"
-                        }
-                    ],
-                    "samples": [
-                        "create {query}",
-                        "make {query}",
-                        "generate {query}",
-                        "produce {query}",
-                        "write {query}",
-                        "compose {query}",
-                        "draft {query}",
-                        "create a story about {query}",
-                        "tell me a story about {query}",
-                        "make up a story about {query}",
-                        "write a poem about {query}",
-                        "compose a poem about {query}",
-                        "create poetry about {query}",
-                        "write a haiku about {query}",
-                        "create a limerick about {query}",
-                        "give me ideas for {query}",
-                        "suggest ideas for {query}",
-                        "brainstorm {query}",
-                        "think of {query}",
-                        "imagine {query}",
-                        "design {query}",
-                        "plan {query}",
-                        "develop {query}",
-                        "invent {query}",
-                        "innovate {query}",
-                        "create a recipe for {query}",
-                        "give me a recipe for {query}",
-                        "how to make {query}",
-                        "how to create {query}",
-                        "how to build {query}",
-                        "how to develop {query}",
-                        "steps to make {query}",
-                        "process for {query}",
-                        "method for {query}",
-                        "approach to {query}",
-                        "craft {query}",
-                        "fabricate {query}",
-                        "construct {query}",
-                        "formulate {query}",
-                        "devise {query}",
-                        "conceive {query}",
-                        "originate {query}",
-                        "author {query}",
-                        "pen {query}",
-                        "script {query}",
-                        "outline {query}",
-                        "sketch {query}"
-                    ]
-                },
-                {
-                    "name": "EntertainmentIntent",
-                    "slots": [
-                        {
-                            "name": "query",
-                            "type": "AMAZON.SearchQuery"
-                        }
-                    ],
-                    "samples": [
-                        "sing {query}",
-                        "sing about {query}",
-                        "sing me {query}",
-                        "create a song about {query}",
-                        "write lyrics for {query}",
-                        "compose music about {query}",
-                        "tell me a joke about {query}",
-                        "make a joke about {query}",
-                        "create humor about {query}",
-                        "make me laugh with {query}",
-                        "entertain me with {query}",
-                        "amuse me with {query}",
-                        "create a riddle about {query}",
-                        "make a puzzle about {query}",
-                        "create a quiz about {query}",
-                        "test me on {query}",
-                        "challenge me with {query}",
-                        "play with {query}",
-                        "have fun with {query}",
-                        "make {query} fun",
-                        "make {query} interesting",
-                        "make {query} exciting",
-                        "surprise me with {query}",
-                        "amaze me with {query}",
-                        "wow me with {query}",
-                        "thrill me with {query}",
-                        "excite me with {query}",
-                        "delight me with {query}",
-                        "dazzle me with {query}",
-                        "impress me with {query}"
-                    ]
-                },
-                {
-                    "name": "EmotionalIntent",
-                    "slots": [
-                        {
-                            "name": "query",
-                            "type": "AMAZON.SearchQuery"
-                        }
-                    ],
-                    "samples": [
-                        "inspire me with {query}",
-                        "motivate me with {query}",
-                        "encourage me with {query}",
-                        "uplift me with {query}",
-                        "comfort me with {query}",
-                        "soothe me with {query}",
-                        "calm me with {query}",
-                        "relax me with {query}",
-                        "make me happy with {query}",
-                        "cheer me up with {query}",
-                        "brighten my day with {query}",
-                        "give me hope with {query}",
-                        "give me courage with {query}",
-                        "give me strength with {query}",
-                        "support me with {query}",
-                        "help me feel better about {query}",
-                        "make me feel good about {query}",
-                        "boost my mood with {query}",
-                        "lift my spirits with {query}",
-                        "touch my heart with {query}",
-                        "move me with {query}",
-                        "make me emotional about {query}",
-                        "make me cry with {query}",
-                        "make me smile with {query}",
-                        "warm my heart with {query}",
-                        "give me peace with {query}",
-                        "heal me with {query}",
-                        "reassure me about {query}",
-                        "console me about {query}",
-                        "empathize with me about {query}"
-                    ]
-                },
-                {
-                    "name": "AnalysisIntent",
-                    "slots": [
-                        {
-                            "name": "query",
-                            "type": "AMAZON.SearchQuery"
-                        }
-                    ],
-                    "samples": [
-                        "analyze {query}",
-                        "examine {query}",
-                        "evaluate {query}",
-                        "assess {query}",
-                        "review {query}",
-                        "critique {query}",
-                        "study {query}",
-                        "investigate {query}",
-                        "explore {query}",
-                        "consider {query}",
-                        "think about {query}",
-                        "reflect on {query}",
-                        "compare {query}",
-                        "contrast {query}",
-                        "differentiate {query}",
-                        "calculate {query}",
-                        "compute {query}",
-                        "solve {query}",
-                        "figure out {query}",
-                        "work out {query}",
-                        "translate {query}",
-                        "convert {query}",
-                        "transform {query}",
-                        "interpret {query}",
-                        "decode {query}",
-                        "predict {query}",
-                        "forecast {query}",
-                        "estimate {query}",
-                        "project {query}",
-                        "anticipate {query}",
-                        "diagnose {query}",
-                        "dissect {query}",
-                        "break down {query}",
-                        "deconstruct {query}",
-                        "research {query} thoroughly",
-                        "deep dive into {query}"
-                    ]
-                },
-                {
-                    "name": "HelpIntent",
-                    "slots": [
-                        {
-                            "name": "query",
-                            "type": "AMAZON.SearchQuery"
-                        }
-                    ],
-                    "samples": [
-                        "suggest {query}",
-                        "recommend {query}",
-                        "advise on {query}",
-                        "give advice about {query}",
-                        "give tips for {query}",
-                        "give pointers on {query}",
-                        "guide me on {query}",
-                        "help me with {query}",
-                        "assist me with {query}",
-                        "support me with {query}",
-                        "aid me with {query}",
-                        "consult on {query}",
-                        "counsel on {query}",
-                        "what should I do about {query}",
-                        "how should I handle {query}",
-                        "how to deal with {query}",
-                        "how to approach {query}",
-                        "best way to {query}",
-                        "optimal way to {query}",
-                        "effective way to {query}",
-                        "improve {query}",
-                        "enhance {query}",
-                        "optimize {query}",
-                        "fix {query}",
-                        "solve {query}",
-                        "resolve {query}",
-                        "troubleshoot {query}",
-                        "debug {query}",
-                        "correct {query}",
-                        "remedy {query}"
-                    ]
-                },
-                {
-                    "name": "PhilosophicalIntent",
-                    "slots": [
-                        {
-                            "name": "query",
-                            "type": "AMAZON.SearchQuery"
-                        }
-                    ],
-                    "samples": [
-                        "philosophize about {query}",
-                        "ponder {query}",
-                        "contemplate {query}",
-                        "meditate on {query}",
-                        "reflect deeply on {query}",
-                        "think deeply about {query}",
-                        "explore the meaning of {query}",
-                        "what is the essence of {query}",
-                        "what is the nature of {query}",
-                        "what is the purpose of {query}",
-                        "why does {query} exist",
-                        "what is the truth about {query}",
-                        "explore the philosophy of {query}",
-                        "discuss the ethics of {query}",
-                        "what are the implications of {query}",
-                        "what is the significance of {query}",
-                        "delve into {query}",
-                        "probe the depths of {query}",
-                        "uncover the truth about {query}",
-                        "reveal the mystery of {query}"
-                    ]
-                },
-                {
-                    "name": "PracticalIntent",
-                    "slots": [
-                        {
-                            "name": "query",
-                            "type": "AMAZON.SearchQuery"
-                        }
-                    ],
-                    "samples": [
-                        "give me practical advice on {query}",
-                        "show me how to {query}",
-                        "teach me to {query}",
-                        "walk me through {query}",
-                        "step by step guide for {query}",
-                        "tutorial for {query}",
-                        "instructions for {query}",
-                        "directions for {query}",
-                        "how do I {query}",
-                        "what are the steps for {query}",
-                        "practical examples of {query}",
-                        "real world examples of {query}",
-                        "case studies of {query}",
-                        "applications of {query}",
-                        "use cases for {query}",
-                        "implementation of {query}",
-                        "execution of {query}",
-                        "checklist for {query}",
-                        "action plan for {query}",
-                        "roadmap for {query}"
-                    ]
-                },
-                {
-                    "name": "TestIntent",
-                    "slots": [],
-                    "samples": [
-                        "test",
-                        "hello",
-                        "hi",
-                        "check status",
-                        "are you working",
-                        "are you there",
-                        "are you alive",
-                        "can you hear me",
-                        "testing testing",
-                        "status check"
-                    ]
-                },
-                {
-                    "name": "AMAZON.FallbackIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.CancelIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.HelpIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.StopIntent",
-                    "samples": []
-                },
-                {
-                    "name": "AMAZON.NavigateHomeIntent",
-                    "samples": []
-                }
-            ],
-            "types": []
+  "interactionModel": {
+    "languageModel": {
+      "intents": [
+        {
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "GptQueryIntent",
+          "samples": [
+            "tell me about {query}",
+            "what is {query}",
+            "explain {query}",
+            "describe {query}",
+            "tell me {query}",
+            "what about {query}",
+            "how about {query}",
+            "I want to know about {query}",
+            "I want to know {query}",
+            "search for {query}",
+            "search {query}",
+            "look up {query}",
+            "find {query}",
+            "research {query}",
+            "investigate {query}",
+            "what does {query} mean",
+            "what is the meaning of {query}",
+            "define {query}",
+            "what do you know about {query}",
+            "information about {query}",
+            "details about {query}",
+            "give me details on {query}",
+            "elaborate on {query}",
+            "clarify {query}",
+            "summarize {query}",
+            "give me a summary of {query}",
+            "brief me on {query}",
+            "give me an overview of {query}",
+            "teach me about {query}",
+            "educate me on {query}",
+            "help me understand {query}",
+            "explain {query} to me",
+            "break down {query}",
+            "simplify {query}",
+            "make {query} simple",
+            "give me examples of {query}",
+            "show me examples of {query}",
+            "what are examples of {query}",
+            "illustrate {query}",
+            "demonstrate {query}",
+            "what\u0027s the deal with {query}",
+            "tell me more about {query}",
+            "expand on {query}",
+            "dive deeper into {query}",
+            "explore {query}",
+            "examine {query}",
+            "discuss {query}",
+            "talk about {query}",
+            "speak about {query}",
+            "what can you tell me about {query}"
+          ]
+        },
+        {
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "CreativeIntent",
+          "samples": [
+            "create {query}",
+            "make {query}",
+            "generate {query}",
+            "produce {query}",
+            "write {query}",
+            "compose {query}",
+            "draft {query}",
+            "create a story about {query}",
+            "tell me a story about {query}",
+            "make up a story about {query}",
+            "write a poem about {query}",
+            "compose a poem about {query}",
+            "create poetry about {query}",
+            "write a haiku about {query}",
+            "create a limerick about {query}",
+            "give me ideas for {query}",
+            "suggest ideas for {query}",
+            "brainstorm {query}",
+            "think of {query}",
+            "imagine {query}",
+            "design {query}",
+            "plan {query}",
+            "develop {query}",
+            "invent {query}",
+            "innovate {query}",
+            "create a recipe for {query}",
+            "give me a recipe for {query}",
+            "how to make {query}",
+            "how to create {query}",
+            "how to build {query}",
+            "how to develop {query}",
+            "steps to make {query}",
+            "process for {query}",
+            "method for {query}",
+            "approach to {query}",
+            "craft {query}",
+            "fabricate {query}",
+            "construct {query}",
+            "formulate {query}",
+            "devise {query}",
+            "conceive {query}",
+            "originate {query}",
+            "author {query}",
+            "pen {query}",
+            "script {query}",
+            "outline {query}",
+            "sketch {query}"
+          ]
+        },
+        {
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "EntertainmentIntent",
+          "samples": [
+            "sing {query}",
+            "sing about {query}",
+            "sing me {query}",
+            "create a song about {query}",
+            "write lyrics for {query}",
+            "compose music about {query}",
+            "tell me a joke about {query}",
+            "make a joke about {query}",
+            "create humor about {query}",
+            "make me laugh with {query}",
+            "entertain me with {query}",
+            "amuse me with {query}",
+            "create a riddle about {query}",
+            "make a puzzle about {query}",
+            "create a quiz about {query}",
+            "test me on {query}",
+            "challenge me with {query}",
+            "play with {query}",
+            "have fun with {query}",
+            "make {query} fun",
+            "make {query} interesting",
+            "make {query} exciting",
+            "surprise me with {query}",
+            "amaze me with {query}",
+            "wow me with {query}",
+            "thrill me with {query}",
+            "excite me with {query}",
+            "delight me with {query}",
+            "dazzle me with {query}",
+            "impress me with {query}"
+          ]
+        },
+        {
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "EmotionalIntent",
+          "samples": [
+            "inspire me with {query}",
+            "motivate me with {query}",
+            "encourage me with {query}",
+            "uplift me with {query}",
+            "comfort me with {query}",
+            "soothe me with {query}",
+            "calm me with {query}",
+            "relax me with {query}",
+            "make me happy with {query}",
+            "cheer me up with {query}",
+            "brighten my day with {query}",
+            "give me hope with {query}",
+            "give me courage with {query}",
+            "give me strength with {query}",
+            "support me with {query}",
+            "help me feel better about {query}",
+            "make me feel good about {query}",
+            "boost my mood with {query}",
+            "lift my spirits with {query}",
+            "touch my heart with {query}",
+            "move me with {query}",
+            "make me emotional about {query}",
+            "make me cry with {query}",
+            "make me smile with {query}",
+            "warm my heart with {query}",
+            "give me peace with {query}",
+            "heal me with {query}",
+            "reassure me about {query}",
+            "console me about {query}",
+            "empathize with me about {query}"
+          ]
+        },
+        {
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "AnalysisIntent",
+          "samples": [
+            "analyze {query}",
+            "examine {query}",
+            "evaluate {query}",
+            "assess {query}",
+            "review {query}",
+            "critique {query}",
+            "study {query}",
+            "investigate {query}",
+            "explore {query}",
+            "consider {query}",
+            "think about {query}",
+            "reflect on {query}",
+            "compare {query}",
+            "contrast {query}",
+            "differentiate {query}",
+            "calculate {query}",
+            "compute {query}",
+            "solve {query}",
+            "figure out {query}",
+            "work out {query}",
+            "translate {query}",
+            "convert {query}",
+            "transform {query}",
+            "interpret {query}",
+            "decode {query}",
+            "predict {query}",
+            "forecast {query}",
+            "estimate {query}",
+            "project {query}",
+            "anticipate {query}",
+            "diagnose {query}",
+            "dissect {query}",
+            "break down {query}",
+            "deconstruct {query}",
+            "research {query} thoroughly",
+            "deep dive into {query}"
+          ]
+        },
+        {
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "HelpIntent",
+          "samples": [
+            "suggest {query}",
+            "recommend {query}",
+            "advise on {query}",
+            "give advice about {query}",
+            "give tips for {query}",
+            "give pointers on {query}",
+            "guide me on {query}",
+            "help me with {query}",
+            "assist me with {query}",
+            "support me with {query}",
+            "aid me with {query}",
+            "consult on {query}",
+            "counsel on {query}",
+            "what should I do about {query}",
+            "how should I handle {query}",
+            "how to deal with {query}",
+            "how to approach {query}",
+            "best way to {query}",
+            "optimal way to {query}",
+            "effective way to {query}",
+            "improve {query}",
+            "enhance {query}",
+            "optimize {query}",
+            "fix {query}",
+            "solve {query}",
+            "resolve {query}",
+            "troubleshoot {query}",
+            "debug {query}",
+            "correct {query}",
+            "remedy {query}"
+          ]
+        },
+        {
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "PhilosophicalIntent",
+          "samples": [
+            "philosophize about {query}",
+            "ponder {query}",
+            "contemplate {query}",
+            "meditate on {query}",
+            "reflect deeply on {query}",
+            "think deeply about {query}",
+            "explore the meaning of {query}",
+            "what is the essence of {query}",
+            "what is the nature of {query}",
+            "what is the purpose of {query}",
+            "why does {query} exist",
+            "what is the truth about {query}",
+            "explore the philosophy of {query}",
+            "discuss the ethics of {query}",
+            "what are the implications of {query}",
+            "what is the significance of {query}",
+            "delve into {query}",
+            "probe the depths of {query}",
+            "uncover the truth about {query}",
+            "reveal the mystery of {query}"
+          ]
+        },
+        {
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "name": "PracticalIntent",
+          "samples": [
+            "give me practical advice on {query}",
+            "show me how to {query}",
+            "teach me to {query}",
+            "walk me through {query}",
+            "step by step guide for {query}",
+            "tutorial for {query}",
+            "instructions for {query}",
+            "directions for {query}",
+            "how do I {query}",
+            "what are the steps for {query}",
+            "practical examples of {query}",
+            "real world examples of {query}",
+            "case studies of {query}",
+            "applications of {query}",
+            "use cases for {query}",
+            "implementation of {query}",
+            "execution of {query}",
+            "checklist for {query}",
+            "action plan for {query}",
+            "roadmap for {query}"
+          ]
+        },
+        {
+          "slots": [],
+          "name": "TestIntent",
+          "samples": [
+            "test",
+            "hello",
+            "hi",
+            "check status",
+            "are you working",
+            "are you there",
+            "are you alive",
+            "can you hear me",
+            "testing testing",
+            "status check"
+          ]
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
         }
+      ],
+      "types": [],
+      "invocationName": "gen ai"
     }
+  }
 }

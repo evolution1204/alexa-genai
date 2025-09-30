@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
+import os
 from typing import Optional, List, Dict
 from openai import OpenAI, APIError, APITimeoutError, RateLimitError
 
-# Developer Console では環境変数が使いにくいため直書き（本番は Secrets 推奨）
-_OPENAI_API_KEY = "sk-proj-xxxxxxxxxxxxxxxxxxxxxxxx"
+# 環境変数からAPIキーを取得（本番はSecretsまたは環境変数を使用）
+_OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
 _DEFAULT_HTTP_TIMEOUT = 3.0  # 8s対策：1回の外部呼び出しは3秒で切る
 _MAX_TOKENS = 120            # 音声向けに短め

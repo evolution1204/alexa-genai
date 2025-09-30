@@ -60,25 +60,25 @@ graph LR
 ```
 
 ### 環境設定
-```python
+```bash
 # OpenAI設定
-OPENAI_MODEL = "gpt-5-chat-latest"
-_OPENAI_API_KEY = "sk-proj-xxxxx"
+OPENAI_API_KEY=sk-proj-xxxxx
+OPENAI_MODEL=gpt-5-chat-latest
 
 # Notion API設定
-NOTION_TOKEN = "ntn_xxxxx"
-NOTION_VERSION = "2022-06-28"
+NOTION_TOKEN=ntn_xxxxx
+NOTION_VERSION=2022-06-28
 
 # S3設定（Alexa Hosted標準）
-S3_BUCKET = "alexa-hosted-bucket-id"
-S3_PREFIX = "Media"
+S3_BUCKET=alexa-hosted-bucket-id
+S3_PREFIX=Media
 
 # パフォーマンスチューニング
-HTTP_TIMEOUT_SEC = 2.0      # API呼び出しタイムアウト
-HARD_DEADLINE_SEC = 4.8     # Lambda処理制限
-MAX_HISTORY_TURNS = 6       # 会話履歴保持数
-NOTION_SEARCH_LIMIT = 3     # Notion検索結果上限
-NOTION_SNIPPET_CHARS = 300  # 抽出文字数
+HTTP_TIMEOUT_SEC=2.0      # API呼び出しタイムアウト
+HARD_DEADLINE_SEC=4.8     # Lambda処理制限
+MAX_HISTORY_TURNS=6       # 会話履歴保持数
+NOTION_SEARCH_LIMIT=3     # Notion検索結果上限
+NOTION_SNIPPET_CHARS=300  # 抽出文字数
 ```
 
 ### キャラクター設定
@@ -247,10 +247,10 @@ graph TD
 
 #### 必須設定
 ```bash
-# .envファイルまたは環境変数で設定
+# lambda/.env ファイルまたは環境変数で設定
 
 # OpenAI API（必須）
-_OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxx
+OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxx
 
 # Notion API（オプション - Notion機能を使う場合）
 NOTION_TOKEN=ntn_xxxxxxxxxxxxx
@@ -266,8 +266,13 @@ S3_PREFIX=Media
 **方法1: .envファイル（開発環境）**
 ```bash
 cd lambda
-cp .env_sample .env
-# .envファイルを編集して各キーを設定
+# .envファイルを作成して各キーを設定
+cat > .env << EOF
+OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxx
+OPENAI_MODEL=gpt-5-chat-latest
+NOTION_TOKEN=ntn_xxxxxxxxxxxxx
+NOTION_VERSION=2022-06-28
+EOF
 ```
 
 **方法2: Alexa開発者コンソール**
@@ -283,7 +288,31 @@ cp .env_sample .env
 
 ### 2. デプロイ手順
 
-#### Alexa Hosted環境（推奨）
+#### 方法A: ASK CLI（推奨 - ローカル開発）
+```bash
+# ASK CLIのインストール（初回のみ）
+npm install -g ask-cli
+
+# 認証設定（初回のみ）
+ask configure
+
+# スキルの初期化（初回のみ）
+ask init --hosted-skill-id amzn1.ask.skill.13ee72f8-8ffc-49c9-9134-3c291e909fa7
+
+# デプロイ（コード変更後）
+ask deploy
+
+# Lambda関数のみデプロイ
+ask deploy --target lambda
+
+# スキルマニフェストのみデプロイ
+ask deploy --target skill-metadata
+
+# インタラクションモデルのみデプロイ
+ask deploy --target model
+```
+
+#### 方法B: Alexa開発者コンソール
 ```bash
 # Alexa開発者コンソールから直接デプロイ
 1. コードエディタで変更を行う
@@ -291,11 +320,11 @@ cp .env_sample .env
 3. 「デプロイ」ボタンをクリック
 ```
 
-#### AWS CLI使用（カスタムLambda環境）
+#### 方法C: AWS CLI使用（カスタムLambda環境）
 ```bash
 # 全ファイルを含むZipファイル作成
 cd lambda
-zip -r lambda-function.zip *.py requirements.txt .env_sample
+zip -r lambda-function.zip *.py requirements.txt
 
 # Lambda関数を更新
 aws lambda update-function-code \
@@ -377,6 +406,8 @@ aws lambda publish-layer-version \
 
 ```
 alexa-genai/
+├── .ask/                       # ASK CLI設定
+│   └── ask-states.json         # スキルID等の状態管理
 ├── lambda/                     # Lambda関数のソースコード
 │   ├── lambda_function.py      # Alexaリクエストルーティング
 │   ├── convo_core.py           # OpenAI GPT-5会話制御
@@ -385,14 +416,19 @@ alexa-genai/
 │   ├── config.py               # 階層的設定管理
 │   ├── utils.py                # OpenAIユーティリティ
 │   ├── requirements.txt        # Python依存関係
-│   ├── .env_sample             # 環境変数サンプル
 │   └── .env                    # 環境変数（gitignore対象）
 ├── skill-package/              # Alexaスキル設定
 │   ├── skill.json              # スキルマニフェスト
+│   ├── assets/                 # アイコン画像
+│   │   └── images/
+│   │       ├── en-US_*.png
+│   │       └── ja-JP_*.png
 │   └── interactionModels/
 │       └── custom/
 │           ├── ja-JP.json      # 日本語インタラクションモデル
 │           └── en-US.json      # 英語インタラクションモデル
+├── ask-resources.json          # ASK CLIリソース定義
+├── .gitignore                  # Git除外設定
 └── README.md                   # このファイル
 ```
 
@@ -508,7 +544,20 @@ Lambda関数のロググループを確認:
 
 ## 🔄 更新履歴
 
-### 2025-09-29（現在のバージョン）
+### 2025-09-30（現在のバージョン）
+- **ASK CLI統合**
+  - ローカル開発環境とAlexa Developer Consoleの連携
+  - `ask deploy`によるワンコマンドデプロイ
+  - GitHubリポジトリとの同期
+- **セキュリティ強化**
+  - OpenAI APIキーを環境変数管理に変更
+  - .envファイルからの動的読み込み
+  - ハードコーディングの排除
+- **プロジェクト構造の統合**
+  - 二重管理の解消
+  - Alexa Hosted Skillからの最新版を正として採用
+
+### 2025-09-29
 - **大規模アーキテクチャ刷新**
   - モジュール化（6つの独立したPythonモジュール）
   - Notion API統合（検索・読み込み機能）

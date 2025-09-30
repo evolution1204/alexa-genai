@@ -266,13 +266,10 @@ S3_PREFIX=Media
 **方法1: .envファイル（開発環境）**
 ```bash
 cd lambda
-# .envファイルを作成して各キーを設定
-cat > .env << EOF
-OPENAI_API_KEY=sk-proj-xxxxxxxxxxxxx
-OPENAI_MODEL=gpt-5-chat-latest
-NOTION_TOKEN=ntn_xxxxxxxxxxxxx
-NOTION_VERSION=2022-06-28
-EOF
+# サンプルファイルをコピーして編集
+cp .env_sample .env
+# .envファイルを編集して各キーを設定
+nano .env  # または vim, code などお好みのエディタで
 ```
 
 **方法2: Alexa開発者コンソール**
@@ -324,7 +321,7 @@ ask deploy --target model
 ```bash
 # 全ファイルを含むZipファイル作成
 cd lambda
-zip -r lambda-function.zip *.py requirements.txt
+zip -r lambda-function.zip *.py requirements.txt .env_sample
 
 # Lambda関数を更新
 aws lambda update-function-code \
@@ -416,6 +413,7 @@ alexa-genai/
 │   ├── config.py               # 階層的設定管理
 │   ├── utils.py                # OpenAIユーティリティ
 │   ├── requirements.txt        # Python依存関係
+│   ├── .env_sample             # 環境変数サンプル（Git管理対象）
 │   └── .env                    # 環境変数（gitignore対象）
 ├── skill-package/              # Alexaスキル設定
 │   ├── skill.json              # スキルマニフェスト

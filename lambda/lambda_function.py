@@ -54,10 +54,16 @@ class GenericQueryIntentsHandler(AbstractRequestHandler):
     def handle(self, handler_input) -> Response:
         s = _get_session(handler_input)
         intent = handler_input.request_envelope.request.intent
+        LOGGER.info(f">>> GenericQueryIntentsHandler: intent={intent.name}")
         slots: Dict[str, Any] = getattr(intent, "slots", {}) or {}
         q = (slots.get("query").value if "query" in slots and slots["query"] else "") or ""
+        LOGGER.info(f">>> Query: {q}")
+        LOGGER.info(f">>> RAG: Starting snippet retrieval...")
         snippets = rag_top_snippets(handler_input, k=5)
+        LOGGER.info(f">>> RAG: Retrieved {len(snippets) if snippets else 0} snippets")
+        LOGGER.info(f">>> Calling LLM API...")
         ans = one_shot_answer(session=s, user_query=q, snippets=snippets)
+        LOGGER.info(f">>> LLM response: {ans[:50] if ans else 'empty'}")
         if ans:
             _append_history(s, "user", q)
             _append_history(s, "assistant", ans)
@@ -281,19 +287,17 @@ class NotionCreatePageIntentHandler(AbstractRequestHandler):
         intent = handler_input.request_envelope.request.intent
         slots: Dict[str, Any] = getattr(intent, "slots", {}) or {}
 
-        title = (slots.get("title").value if "title" in slots and slots["title"] else "") or ""
         content = (slots.get("content").value if "content" in slots and slots["content"] else "") or ""
 
-        # タイトルとコンテンツの処理
-        if not title and not content:
-            speech = "タイトルか内容を教えてね。"
-        elif not title:
-            # タイトルがない場合、コンテンツから最初の部分をタイトルにする
-            title = content[:30] if len(content) > 30 else content
-            content = content
-        elif not content:
-            # コンテンツがない場合、タイトルのみのページを作成
-            content = ""
+        if not content:
+            speech = "内容を教えてね。"
+            return (handler_input.response_builder
+                    .speak(to_safe_ssml(speech))
+                    .ask(to_safe_ssml(speech))
+                    .response)
+
+        # コンテンツの最初の30文字をタイトルにする
+        title = content[:30] if len(content) > 30 else content
 
         # Notionページ作成
         result = notion_create_page(title=title, content=content)
@@ -315,19 +319,17 @@ class NotionAddToDatabaseIntentHandler(AbstractRequestHandler):
         intent = handler_input.request_envelope.request.intent
         slots: Dict[str, Any] = getattr(intent, "slots", {}) or {}
 
-        title = (slots.get("title").value if "title" in slots and slots["title"] else "") or ""
         content = (slots.get("content").value if "content" in slots and slots["content"] else "") or ""
 
-        # タイトルとコンテンツの処理
-        if not title and not content:
-            speech = "タイトルか内容を教えてね。"
-        elif not title:
-            # タイトルがない場合、コンテンツから最初の部分をタイトルにする
-            title = content[:30] if len(content) > 30 else content
-            content = content
-        elif not content:
-            # コンテンツがない場合、タイトルのみのエントリを作成
-            content = ""
+        if not content:
+            speech = "内容を教えてね。"
+            return (handler_input.response_builder
+                    .speak(to_safe_ssml(speech))
+                    .ask(to_safe_ssml(speech))
+                    .response)
+
+        # コンテンツの最初の30文字をタイトルにする
+        title = content[:30] if len(content) > 30 else content
 
         # Notionデータベースにエントリ追加
         result = notion_add_to_database(title=title, content=content)

@@ -210,7 +210,7 @@ def notion_add_to_database(title: str, content: str, *, database_id: str = None,
     データベースに新しいエントリを追加
 
     Args:
-        title: エントリタイトル（Nameプロパティ）
+        title: エントリタイトル（タイトルプロパティ）
         content: エントリ本文
         database_id: データベースID（省略時は環境変数のデフォルトDBを使用）
         timeout: タイムアウト秒数
@@ -227,11 +227,34 @@ def notion_add_to_database(title: str, content: str, *, database_id: str = None,
     if not database_id:
         return {"success": False, "error": "データベースIDが指定されていません"}
 
+    # まずデータベースのスキーマを取得して、タイトルプロパティ名を特定
+    db_url = f"https://api.notion.com/v1/databases/{database_id}"
+    try:
+        db_resp = requests.get(db_url, headers=_notion_headers(), timeout=timeout)
+        if db_resp.status_code != 200:
+            return {"success": False, "error": "データベース情報の取得に失敗しました"}
+
+        db_data = db_resp.json()
+        db_properties = db_data.get("properties", {})
+
+        # タイトルプロパティを探す
+        title_property_name = None
+        for prop_name, prop_data in db_properties.items():
+            if prop_data.get("type") == "title":
+                title_property_name = prop_name
+                break
+
+        if not title_property_name:
+            return {"success": False, "error": "データベースにタイトルプロパティが見つかりません"}
+
+    except Exception as e:
+        return {"success": False, "error": f"データベース情報取得エラー: {type(e).__name__}"}
+
     url = "https://api.notion.com/v1/pages"
 
-    # データベースエントリのプロパティ（Nameプロパティを想定）
+    # データベースエントリのプロパティ（動的に取得したプロパティ名を使用）
     properties = {
-        "Name": {
+        title_property_name: {
             "title": [{"text": {"content": title}}]
         }
     }

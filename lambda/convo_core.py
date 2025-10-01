@@ -6,8 +6,10 @@ import logging
 from typing import List, Dict, Any, Optional
 
 from utils import get_openai_client_from_utils, call_openai_chat_once
+from claude_utils import get_claude_client, call_claude_chat_once
 from config import (
-    OPENAI_MODEL, HTTP_TIMEOUT_SEC, HARD_DEADLINE_SEC, MAX_HISTORY_TURNS, warn_if_missing
+    LLM_PROVIDER, OPENAI_MODEL, CLAUDE_MODEL, HTTP_TIMEOUT_SEC,
+    HARD_DEADLINE_SEC, MAX_HISTORY_TURNS, warn_if_missing
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -93,6 +95,23 @@ def _build_chat_messages(session: Dict[str, Any], user_query: str, snippets: Opt
     return msgs
 
 def one_shot_answer(session: Dict[str, Any], user_query: str, snippets: Optional[list] = None) -> str:
-    client = get_openai_client_from_utils(timeout_sec=HTTP_TIMEOUT_SEC)
-    messages = _build_chat_messages(session, user_query, snippets)
-    return call_openai_chat_once(client, OPENAI_MODEL, messages, timeout_sec=HTTP_TIMEOUT_SEC)
+    try:
+        messages = _build_chat_messages(session, user_query, snippets)
+
+        # デバッグ: LLM_PROVIDERの値を確認
+        LOGGER.info(f"[LLM] Provider: '{LLM_PROVIDER}' (type: {type(LLM_PROVIDER).__name__})")
+
+        if LLM_PROVIDER == "claude":
+            LOGGER.info("[LLM] Using Claude API")
+            client = get_claude_client(timeout_sec=HTTP_TIMEOUT_SEC)
+            return call_claude_chat_once(client, CLAUDE_MODEL, messages, timeout_sec=HTTP_TIMEOUT_SEC, system_prompt=SYSTEM_PROMPT)
+        else:
+            # デフォルトはOpenAI
+            LOGGER.info(f"[LLM] Using OpenAI API (provider was: '{LLM_PROVIDER}')")
+            client = get_openai_client_from_utils(timeout_sec=HTTP_TIMEOUT_SEC)
+            return call_openai_chat_once(client, OPENAI_MODEL, messages, timeout_sec=HTTP_TIMEOUT_SEC)
+    except Exception as e:
+        LOGGER.error(f"[LLM] Exception in one_shot_answer: {type(e).__name__}: {str(e)}")
+        import traceback
+        LOGGER.error(f"[LLM] Traceback: {traceback.format_exc()}")
+        return ""
